@@ -61,11 +61,12 @@ export default function LoginScreen() {
       <View style={styles.formContainer}>
         <Image
           source={require('@/assets/images/logo.png')}
-          style={{ width: '100%', height: 150, marginBottom: 30 }}
+          style={{ width: '100%', height: 100, marginBottom: 10 }}
           resizeMode="contain"
         />
+        <Text style={styles.name}>Foodify</Text>
         <Text style={styles.title}>Log In</Text>
-        <Text style={styles.descriptionTitle}>By Logging in, you agree to our Terms of Use</Text>
+        <Text style={styles.descriptionTitle}>By logging in, you agree to our Terms of Use</Text>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Username</Text>
@@ -119,6 +120,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', justifyContent: 'center' },
   formContainer: { padding: 20, width: '100%', maxWidth: 400, alignSelf: 'center' },
+  name: { fontSize: 32, fontWeight: 'bold', color: '#000', marginBottom: 40, textAlign: 'center' },
   title: { fontSize: 32, fontWeight: 'bold', color: '#000', marginBottom: 10, textAlign: 'left' },
   descriptionTitle: {
     fontSize: 16,
