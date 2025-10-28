@@ -16,6 +16,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useConfetti } from 'typegpu-confetti/react-native';
 
 interface UploadModalProps {
   visible: boolean;
@@ -44,8 +45,15 @@ export default function UploadModal({
 }: UploadModalProps) {
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
+  const confettiRef = useConfetti();
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (data && !loading) {
+      confettiRef?.current?.addParticles(80);
+    }
+  }, [data, loading]);
 
   useEffect(() => {
     const animate = () => {
