@@ -4,6 +4,7 @@ import GalerySVG from '@/assets/icons/gallery.svg';
 import SearchSVG from '@/assets/icons/search.svg';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -16,7 +17,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useConfetti } from 'typegpu-confetti/react-native';
 
 interface UploadModalProps {
   visible: boolean;
@@ -45,15 +45,15 @@ export default function UploadModal({
 }: UploadModalProps) {
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
-  const confettiRef = useConfetti();
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const confettiRef = useRef<LottieView>(null);
 
   useEffect(() => {
-    if (data && !loading) {
-      confettiRef?.current?.addParticles(80);
+    if (data) {
+      confettiRef.current?.play();
     }
-  }, [data, loading]);
+  }, [data]);
 
   useEffect(() => {
     const animate = () => {
@@ -244,8 +244,20 @@ export default function UploadModal({
                 <Animated.View style={{ transform: [{ rotate }], marginBottom: 10 }}>
                   <FeedSVG width={35} height={35} />
                 </Animated.View>
-                <Text style={styles.buttonText}>Feed Your Character</Text>
+                <Text style={styles.buttonText}>Feed Character</Text>
               </Pressable>
+              <LottieView
+                ref={confettiRef}
+                source={require('@/assets/lottie/Confetti.json')}
+                autoPlay={false}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  top: -50,
+                }}
+                loop={false}
+              />
             </>
           )}
 

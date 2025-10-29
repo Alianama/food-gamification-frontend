@@ -6,7 +6,6 @@ import 'react-native-reanimated';
 import { store } from '@/store';
 import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
-import { ConfettiProvider } from 'typegpu-confetti/react-native';
 
 export const unstable_settings = {
   // This tells expo-router to use Stack navigation for (tabs) group
@@ -16,29 +15,27 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <ConfettiProvider>
-        <ThemeProvider value={DefaultTheme}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen
-              name="login"
-              options={{
-                headerShown: false,
-                statusBarStyle: 'dark',
-              }}
-            />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="modal"
-              options={{
-                presentation: 'modal',
-                title: 'Modal',
-              }}
-            />
-          </Stack>
-          <StatusBar style="dark" />
-          <Toast />
-        </ThemeProvider>
-      </ConfettiProvider>
+      <ThemeProvider value={DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen
+            name="login"
+            options={{
+              headerShown: false,
+              statusBarStyle: 'dark',
+            }}
+          />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: 'modal',
+              title: 'Modal',
+            }}
+          />
+        </Stack>
+        <StatusBar style="dark" />
+        <Toast />
+      </ThemeProvider>
     </Provider>
   );
 }
