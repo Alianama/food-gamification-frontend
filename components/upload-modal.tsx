@@ -29,6 +29,7 @@ interface UploadModalProps {
   onTakePhoto: () => void;
   onPickGallery: () => void;
   onUpload: () => void;
+  onConfirm: () => void;
 }
 
 export default function UploadModal({
@@ -42,6 +43,7 @@ export default function UploadModal({
   onTakePhoto,
   onPickGallery,
   onUpload,
+  onConfirm,
 }: UploadModalProps) {
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
@@ -85,6 +87,21 @@ export default function UploadModal({
   }, []);
 
   const rotate = shakeAnim.interpolate({ inputRange: [-1, 1], outputRange: ['-6deg', '6deg'] });
+
+  const nutrition = data?.data?.predictions?.nutrition_info?.nutrition as Record<
+    string,
+    string | number
+  >;
+
+  const nutritionLabels: Record<string, { label: string; emoji: string; bg: string }> = {
+    calories: { label: 'Calories', emoji: '🔥', bg: '#FFB74D' },
+    protein: { label: 'Protein', emoji: '💪', bg: '#4FC3F7' },
+    carbohydrate: { label: 'Carbohydrate', emoji: '🍚', bg: '#81C784' },
+    fat: { label: 'Fat', emoji: '🧈', bg: '#E57373' },
+    fiber: { label: 'Fiber', emoji: '🌾', bg: '#A1887F' },
+    sugar: { label: 'Sugar', emoji: '🍬', bg: '#F48FB1' },
+    sodium: { label: 'Sodium', emoji: '🧂', bg: '#90CAF9' },
+  };
 
   const FileInfo = () =>
     mimeType || (imageUri?.includes('.') ? imageUri.split('.').pop() : 'unknown');
@@ -200,47 +217,28 @@ export default function UploadModal({
             <>
               <View style={styles.resultCard}>
                 <Text style={styles.resultFoodTitle}>
-                  🍽 {data.data.predictions.predicted_food}
+                  🍽 {data?.data?.predictions?.predicted_food || 'Makanan'}
                 </Text>
 
-                <View style={styles.nutritionRow}>
-                  <Text style={[styles.nutritionLabel, { backgroundColor: '#FFB74D' }]}>
-                    🔥 Kalori
-                  </Text>
-                  <Text style={styles.nutritionValue}>
-                    {data.data.predictions.nutrition_info.nutrition.calories} kcal
-                  </Text>
-                </View>
+                {nutrition &&
+                  Object.entries(nutrition).map(([key, value]) => {
+                    const item = nutritionLabels[key];
+                    if (!item) return null;
 
-                <View style={styles.nutritionRow}>
-                  <Text style={[styles.nutritionLabel, { backgroundColor: '#4FC3F7' }]}>
-                    💪 Protein
-                  </Text>
-                  <Text style={styles.nutritionValue}>
-                    {data.data.predictions.nutrition_info.nutrition.protein} g
-                  </Text>
-                </View>
-
-                <View style={styles.nutritionRow}>
-                  <Text style={[styles.nutritionLabel, { backgroundColor: '#81C784' }]}>
-                    🍚 Karbo
-                  </Text>
-                  <Text style={styles.nutritionValue}>
-                    {data.data.predictions.nutrition_info.nutrition.carbohydrate} g
-                  </Text>
-                </View>
-
-                <View style={styles.nutritionRow}>
-                  <Text style={[styles.nutritionLabel, { backgroundColor: '#E57373' }]}>
-                    🧈 Lemak
-                  </Text>
-                  <Text style={styles.nutritionValue}>
-                    {data.data.predictions.nutrition_info.nutrition.fat} g
-                  </Text>
-                </View>
+                    return (
+                      <View key={key} style={styles.nutritionRow}>
+                        <Text style={[styles.nutritionLabel, { backgroundColor: item.bg }]}>
+                          {item.emoji} {item.label}
+                        </Text>
+                        <Text style={styles.nutritionValue}>
+                          {typeof value === 'string' || typeof value === 'number' ? value : '-'} g
+                        </Text>
+                      </View>
+                    );
+                  })}
               </View>
 
-              <Pressable style={[styles.buttonPrimary, { marginTop: 28 }]} onPress={onClose}>
+              <Pressable style={[styles.buttonPrimary, { marginTop: 28 }]} onPress={onConfirm}>
                 <Animated.View style={{ transform: [{ rotate }], marginBottom: 10 }}>
                   <FeedSVG width={35} height={35} />
                 </Animated.View>

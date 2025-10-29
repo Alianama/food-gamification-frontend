@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import authReducer from './auth/reducer';
-import foodReducer from './food/reducer';
+import authReducer from './auth/slice';
+import foodReducer from './food/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,

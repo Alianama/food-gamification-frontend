@@ -3,39 +3,45 @@ import UploadModal from '@/components/upload-modal';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { RootState } from '@/store';
-import { foodDetection } from '@/store/food/action';
+import { asyncConfirmFood, asyncFoodDetection, clearFoodData } from '@/store/food/slice';
+import { showError, showSuccess } from '@/utils/toast';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, Slot } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const dispatch = useDispatch<any>();
+
   const { accessToken } = useSelector((state: RootState) => state.auth);
+  const { loading, predictedData, error, confirmSuccess } = useSelector(
+    (state: RootState) => state.food,
+  );
 
   const [modalVisible, setModalVisible] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('unknown');
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState<any | null>(null);
 
   if (!accessToken) return <Redirect href="/lobby" />;
 
-  const handleCameraPress = () => {
-    setModalVisible(true);
+  const resetModal = () => {
+    setModalVisible(false);
     setImageUri(null);
-    setData(null);
-    setError(null);
     setMimeType('unknown');
+    dispatch(clearFoodData());
+  };
+
+  const handleCameraPress = () => {
+    resetModal();
+    setModalVisible(true);
   };
 
   const handleTakePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return alert('Izin kamera dibutuhkan!');
+    if (!permission.granted) return showError('Izin kamera dibutuhkan!');
 
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!result.canceled) {
@@ -47,7 +53,7 @@ export default function TabLayout() {
 
   const handlePickGallery = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return alert('Izin galeri dibutuhkan!');
+    if (!permission.granted) return showError('Izin galeri dibutuhkan!');
 
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
     if (!result.canceled) {
@@ -57,61 +63,58 @@ export default function TabLayout() {
     }
   };
 
-  const handleUpload = async () => {
-    if (!imageUri) return;
+  const handleConfirmFood = async () => {
+    if (!predictedData?.data?.foodHistoryId) {
+      showError('Data makanan tidak ditemukan!');
+      return;
+    }
 
-    setLoading(true);
-    setError(null);
+    await dispatch(asyncConfirmFood(predictedData.data.foodHistoryId));
+  };
+
+  const handleUpload = async () => {
+    if (!imageUri) return showError('Gambar belum dipilih!');
 
     try {
-      let processedUri = imageUri;
-      let processedMime = mimeType;
+      let finalUri = imageUri;
+      let finalMime = mimeType;
 
       const compressed = await ImageManipulator.manipulateAsync(
-        processedUri,
+        imageUri,
         [{ resize: { width: 1080 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG },
       );
-      processedUri = compressed.uri;
-      processedMime = 'image/jpeg';
 
-      console.log('✅ Compressed Image:', processedUri);
-
-      if (mimeType === 'image/heic' || imageUri?.toLowerCase().endsWith('.heic')) {
-        console.log('⚠️ Convert HEIC → JPEG');
-
-        const converted = await ImageManipulator.manipulateAsync(processedUri, [], {
-          compress: 0.9,
-          format: ImageManipulator.SaveFormat.JPEG,
-        });
-
-        processedUri = converted.uri;
-        processedMime = 'image/jpeg';
-      }
-
-      console.log('📌 READY TO UPLOAD:', processedUri, processedMime);
+      finalUri = compressed.uri;
+      finalMime = 'image/jpeg';
 
       const formData = new FormData();
       formData.append('image', {
-        uri: processedUri,
-        type: processedMime,
-        name: `food.${processedMime === 'image/jpeg' ? 'jpg' : 'png'}`,
+        uri: finalUri,
+        type: finalMime,
+        name: 'food.jpg',
       } as any);
 
-      const resAction = await dispatch(foodDetection(formData));
-
-      if (foodDetection.fulfilled.match(resAction)) {
-        setData(resAction.payload);
-      } else {
-        setError(resAction.payload?.message || 'Upload gagal');
-      }
+      dispatch(asyncFoodDetection(formData));
     } catch (err: any) {
-      console.log('Upload error:', err);
-      setError('Kesalahan jaringan');
+      showError('Gagal upload gambar');
     }
-
-    setLoading(false);
   };
+
+  // ✅ Beri notifikasi ketika confirm success
+  useEffect(() => {
+    if (confirmSuccess) {
+      showSuccess('Makanan berhasil dikonfirmasi!');
+      resetModal();
+    }
+  }, [confirmSuccess]);
+
+  // ✅ Error Redux tampil otomatis
+  useEffect(() => {
+    if (error) {
+      showError(error);
+    }
+  }, [error]);
 
   return (
     <View
@@ -119,17 +122,19 @@ export default function TabLayout() {
     >
       <Slot />
       <CustomBottomBar onCameraPress={handleCameraPress} />
+
       <UploadModal
         visible={modalVisible}
         imageUri={imageUri}
         mimeType={mimeType}
         loading={loading}
-        data={data}
+        data={predictedData}
         error={error}
-        onClose={() => setModalVisible(false)}
+        onClose={resetModal}
         onTakePhoto={handleTakePhoto}
         onPickGallery={handlePickGallery}
         onUpload={handleUpload}
+        onConfirm={handleConfirmFood}
       />
     </View>
   );

@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import type { AppDispatch, RootState } from '@/store';
-import { login } from '@/store/auth/action';
+import { login } from '@/store/auth/slice';
 import { showError, showSuccess } from '@/utils/toast';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
