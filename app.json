@@ -24,7 +24,6 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.anonymous.foodgamificationfrontend"
@@ -60,7 +59,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "EXPO_PUBLIC_BASE_URL": "process.env.EXPO_PUBLIC_BASE_URL"
+      "EXPO_PUBLIC_BASE_URL": "process.env.EXPO_PUBLIC_BASE_URL",
+      "router": {},
+      "eas": {
+        "projectId": "b1e060b4-540c-47d5-847d-2761da31b70f"
+      }
     }
   }
 }

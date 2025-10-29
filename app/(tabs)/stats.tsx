@@ -11,11 +11,15 @@ export default function StatsScreen() {
 
   useEffect(() => {
     if (!stats) dispatch(asyncGetCharacterStats());
-  }, [stats]);
+  }, [stats, dispatch]);
 
-  const character = stats?.data?.character;
-  const averages = stats?.data?.averages;
-  const healthInfo = stats?.data?.health;
+  const data = stats?.data;
+  const character = data?.character;
+  const averages = data?.averages;
+  const healthInfo = data?.health;
+  const weeklyBreakdown = data?.weeklyBreakdown;
+  const mostConsumedFoods = data?.mostConsumedFoods;
+  const tips = data?.healthRecommendations;
 
   const xpProgress = character ? (character.xpPoint / character.xpToNextLevel) * 100 : 0;
 
@@ -28,9 +32,9 @@ export default function StatsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* XP & Stats Card */}
-      <View style={styles.neuDark}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Character Stats */}
+      <View style={[styles.neuDark, { marginTop: 20 }]}>
         <View style={[styles.neuLight, styles.card]}>
           <Text style={styles.title}>Character Stats</Text>
 
@@ -43,7 +47,7 @@ export default function StatsScreen() {
           <Text style={styles.label}>Status</Text>
           <Text style={styles.value}>{character?.statusName}</Text>
 
-          {/* XP Bar */}
+          {/* XP Progress */}
           <View style={styles.progressOuter}>
             <View style={[styles.progressInner, { width: `${xpProgress}%` }]} />
           </View>
@@ -62,7 +66,47 @@ export default function StatsScreen() {
         </View>
       </View>
 
-      {/* Nutrition */}
+      {/* Most Consumed Foods */}
+      <View style={styles.neuDark}>
+        <View style={[styles.neuLight, styles.card]}>
+          <Text style={styles.title}>Most Consumed Foods</Text>
+          {mostConsumedFoods?.map((item: any, i: number) => (
+            <View key={i} style={styles.statRow}>
+              <Text style={styles.statKey}>{item.foodName}</Text>
+              <Text style={styles.statValue}>{item.count}x</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Weekly Status */}
+      <View style={styles.neuDark}>
+        <View style={[styles.neuLight, styles.card]}>
+          <Text style={styles.title}>Weekly Intake Status</Text>
+          {weeklyBreakdown?.map((day: any, i: number) => (
+            <View key={i} style={styles.statRow}>
+              <Text style={styles.statKey}>{day.name}</Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  {
+                    color:
+                      day.status === 'Healthy'
+                        ? '#16a34a'
+                        : day.status === 'Risky'
+                          ? '#dc2626'
+                          : '#ca8a04',
+                  },
+                ]}
+              >
+                {day.status}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Nutrition Averages */}
       <View style={styles.neuDark}>
         <View style={[styles.neuLight, styles.card]}>
           <Text style={styles.title}>Nutrition Averages</Text>
@@ -75,11 +119,11 @@ export default function StatsScreen() {
         </View>
       </View>
 
-      {/* Recommendations */}
-      <View style={styles.neuDark}>
-        <View style={[styles.neuLight, styles.card]}>
+      {/* Tips */}
+      <View style={[styles.neuDark, { marginBottom: 90 }]}>
+        <View style={[styles.neuLight, styles.card, { marginBottom: 50 }]}>
           <Text style={styles.title}>Health Tips</Text>
-          {stats?.data?.healthRecommendations?.map((tip: string, i: number) => (
+          {tips?.map((tip: string, i: number) => (
             <Text key={i} style={styles.tip}>
               • {tip}
             </Text>
@@ -90,8 +134,6 @@ export default function StatsScreen() {
   );
 }
 
-// === Styles ===
-
 const BG = '#fff';
 
 const styles = StyleSheet.create({
@@ -100,14 +142,11 @@ const styles = StyleSheet.create({
     padding: 18,
     backgroundColor: BG,
   },
-
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  /** Neumorphism Container Shadow Dark */
   neuDark: {
     backgroundColor: BG,
     padding: 4,
@@ -118,8 +157,6 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     marginBottom: 20,
   },
-
-  /** Neumorphism Inner Shadow Light */
   neuLight: {
     backgroundColor: BG,
     shadowColor: '#fff',
@@ -128,39 +165,32 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     borderRadius: 26,
   },
-
   card: {
     padding: 18,
     borderRadius: 26,
   },
-
-  // Text styles
   title: {
     fontSize: 18,
     fontWeight: '800',
     color: '#222',
     marginBottom: 10,
   },
-
   label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#666',
     marginTop: 6,
   },
-
   value: {
     fontSize: 18,
     fontWeight: '900',
     color: '#111',
   },
-
   subText: {
     fontSize: 12,
     color: '#444',
     marginTop: 8,
   },
-
   progressOuter: {
     width: '100%',
     height: 14,
@@ -169,37 +199,31 @@ const styles = StyleSheet.create({
     marginTop: 12,
     overflow: 'hidden',
   },
-
   progressInner: {
     height: '100%',
     backgroundColor: '#FF6B6B',
     borderRadius: 12,
   },
-
   healthScore: {
     fontSize: 44,
     fontWeight: '900',
     color: '#14532D',
   },
-
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
   },
-
   statKey: {
     fontSize: 14,
     fontWeight: '700',
     color: '#222',
   },
-
   statValue: {
     fontSize: 14,
     fontWeight: '900',
     color: '#111',
   },
-
   tip: {
     fontSize: 14,
     color: '#0F172A',

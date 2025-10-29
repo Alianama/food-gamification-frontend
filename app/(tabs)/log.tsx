@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 export default function LogScreen() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>kontrak</Text>
+      <Text>riski</Text>
     </View>
   );
 }

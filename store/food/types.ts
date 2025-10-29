@@ -87,6 +87,7 @@ export interface FoodStatsData {
   };
   mostConsumedFoods: MostConsumedFoodItem[];
   dailyBreakdown: DailyBreakdownItem[];
+  weeklyBreakdown: DailyBreakdownItem[];
 }
 
 export interface FoodStatsResponse {

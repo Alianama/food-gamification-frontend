@@ -1,41 +1,48 @@
-type RolePermission = {
+export type Permission = {
   id: number;
+  roleId: number;
   permissionId: number;
-  permission: { id: number; name: string; description: string };
+  createdAt: string;
+  updatedAt: string;
+  permission: {
+    id: number;
+    name: string;
+    description: string;
+    isDeleted: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
 };
 
-type Role = { id: number; name: string; description: string; permissions?: RolePermission[] };
+export type Role = {
+  id: number;
+  name: string;
+  description: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  permissions: Permission[];
+};
 
-type AuthData = {
+export type UserData = {
   id: number;
   username: string;
-  fullName?: string;
+  fullName: string;
   email: string;
-  role?: Role;
-  accessToken?: string;
-  refreshToken?: string;
+  role: Role;
+  accessToken: string;
+  refreshToken: string;
 };
 
-type AuthState = {
+export type LoginResponse = {
+  status: 'success' | 'error';
+  message: string;
+  data?: UserData | null;
+};
+
+export type AuthState = {
+  user: UserData | null;
+  accessToken: string | null;
   loading: boolean;
   error: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  user: Omit<AuthData, 'accessToken' | 'refreshToken'> | null;
 };
-
-type LoginPayload = { username: string; password: string };
-type LoginResponse = {
-  status: string;
-  message: string;
-  data: AuthData;
-};
-
-type RegisterPayload = { username: string; fullName: string; email: string; password: string };
-type RegisterResponse = {
-  status: string;
-  message: string;
-  data: Omit<AuthData, 'accessToken' | 'refreshToken'>;
-};
-
-export type { AuthData, AuthState, LoginPayload, LoginResponse, RegisterPayload, RegisterResponse };
