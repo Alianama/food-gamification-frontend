@@ -28,7 +28,7 @@ export default function GameHud({ level, statusName, healthPoint, xpPoint, xpToN
         </View>
         <View style={styles.barWrapper}>
           <LinearGradient
-            colors={['#FF4B4B', '#FF8585']}
+            colors={['#9bff00', '#7bc50bff']}
             style={[styles.healthBar, { width: `${healthPercent}%` }]}
           />
           <Text style={styles.barLabel}>HP {healthPoint}</Text>
