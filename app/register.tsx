@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import type { AppDispatch, RootState } from '@/store';
-import { register } from '@/store/auth/slice';
+import { asyncCreateUser } from '@/store/profile/slice';
 import { showError, showSuccess } from '@/utils/toast';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -33,7 +33,7 @@ export default function RegisterScreen() {
       showSuccess('Registrasi berhasil!');
       router.replace('/(tabs)');
     }
-  }, [accessToken]);
+  }, [accessToken, router]);
 
   useEffect(() => {
     if (error) {
@@ -46,7 +46,7 @@ export default function RegisterScreen() {
       showError('Semua field wajib diisi');
       return;
     }
-    dispatch(register({ username, fullName, email, password }));
+    dispatch(asyncCreateUser({ username, fullName, email, password }));
   };
 
   const handleLogin = () => {

@@ -33,7 +33,7 @@ export default function LoginScreen() {
       showSuccess('Login berhasil!');
       router.replace('/(tabs)');
     }
-  }, [accessToken]);
+  }, [accessToken, router]);
 
   useEffect(() => {
     if (error) {
@@ -107,7 +107,7 @@ export default function LoginScreen() {
         {error ? <Text style={styles.errorText}>{String(error)}</Text> : null}
 
         <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have account?</Text>
+          <Text style={styles.registerText}>Dont have account?</Text>
           <TouchableOpacity onPress={handleRegister}>
             <Text style={styles.registerLink}> Register</Text>
           </TouchableOpacity>

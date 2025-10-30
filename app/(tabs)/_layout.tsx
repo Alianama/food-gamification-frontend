@@ -7,16 +7,17 @@ import { asyncConfirmFood, asyncFoodDetection, clearFoodData } from '@/store/foo
 import { showError, showSuccess } from '@/utils/toast';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Redirect, Slot } from 'expo-router';
+import { Slot, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const dispatch = useDispatch<any>();
+  const router = useRouter();
 
-  const { accessToken } = useSelector((state: RootState) => state.auth);
+  const { accessToken, loading: authLoading } = useSelector((state: RootState) => state.auth);
   const { loading, predictedData, error, confirmSuccess } = useSelector(
     (state: RootState) => state.food,
   );
@@ -24,8 +25,20 @@ export default function TabLayout() {
   const [modalVisible, setModalVisible] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('unknown');
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (!accessToken) return <Redirect href="/lobby" />;
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // ✅ Proteksi route setelah layout benar-benar mounted
+  useEffect(() => {
+    if (isMounted && !authLoading && !accessToken) {
+      setTimeout(() => {
+        router.replace('/lobby');
+      }, 0);
+    }
+  }, [accessToken, authLoading, isMounted, router]);
 
   const resetModal = () => {
     setModalVisible(false);
@@ -68,7 +81,6 @@ export default function TabLayout() {
       showError('Data makanan tidak ditemukan!');
       return;
     }
-
     await dispatch(asyncConfirmFood(predictedData.data.foodHistoryId));
   };
 
@@ -76,45 +88,47 @@ export default function TabLayout() {
     if (!imageUri) return showError('Gambar belum dipilih!');
 
     try {
-      let finalUri = imageUri;
-      let finalMime = mimeType;
-
       const compressed = await ImageManipulator.manipulateAsync(
         imageUri,
         [{ resize: { width: 1080 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG },
       );
 
-      finalUri = compressed.uri;
-      finalMime = 'image/jpeg';
-
       const formData = new FormData();
       formData.append('image', {
-        uri: finalUri,
-        type: finalMime,
+        uri: compressed.uri,
+        type: 'image/jpeg',
         name: 'food.jpg',
       } as any);
 
       dispatch(asyncFoodDetection(formData));
     } catch (err: any) {
-      showError('Gagal upload gambar');
+      showError(err.message || 'Gagal upload gambar');
     }
   };
 
-  // ✅ Beri notifikasi ketika confirm success
   useEffect(() => {
     if (confirmSuccess) {
       showSuccess('Makanan berhasil dikonfirmasi!');
-      resetModal();
     }
   }, [confirmSuccess]);
 
-  // ✅ Error Redux tampil otomatis
   useEffect(() => {
     if (error) {
       showError(error);
     }
   }, [error]);
+
+  // ⏳ Spinner loading sementara menunggu token
+  if (authLoading || !isMounted) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
+      </View>
+    );
+  }
+
+  if (!accessToken) return null;
 
   return (
     <View

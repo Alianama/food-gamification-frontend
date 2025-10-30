@@ -8,7 +8,6 @@ import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
 
 export const unstable_settings = {
-  // This tells expo-router to use Stack navigation for (tabs) group
   initialRouteName: '(tabs)',
 };
 
