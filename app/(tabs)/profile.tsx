@@ -3,25 +3,41 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { RootState } from '@/store';
 import { logout } from '@/store/auth/slice';
 import { asyncGetProfile } from '@/store/profile/slice';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { api } from '@/utils/api';
 import KeySVG from '../../assets/icons/key.svg';
 import LogoutSVG from '../../assets/icons/logout.svg';
 
 export default function Profile() {
   const dispatch = useDispatch<any>();
   const { data, loading, error } = useSelector((state: RootState) => state.profile);
+  // Ambil data karakter dari food/stats jika ada (lebih real-time setelah feed)
+  // fallback ke data dari profile API
+  const foodStats = useSelector((state: RootState) => state.food.stats);
+  const character = foodStats?.data?.character ?? data?.character;
   const [modalVisible, setModalVisible] = useState(false);
+  const [pwModalVisible, setPwModalVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
   const colorScheme = useColorScheme();
   const tint = colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint;
 
@@ -30,11 +46,73 @@ export default function Profile() {
   }, [dispatch]);
 
   const handleChangePassword = () => {
-    Alert.alert('Action', 'Ganti Password ditekan');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPwModalVisible(true);
   };
 
-  const handleChangeProfilePicture = () => {
-    Alert.alert('Action', 'Ganti Profile Picture ditekan');
+  const handleSubmitChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert('Error', 'Semua field wajib diisi.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Password baru dan konfirmasi password tidak sama.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('Error', 'Password baru minimal 6 karakter.');
+      return;
+    }
+    try {
+      setPwLoading(true);
+      await api.put('/users/change-password', { currentPassword, newPassword });
+      Alert.alert('Berhasil', 'Password berhasil diubah! Silakan login kembali.');
+      setPwModalVisible(false);
+      dispatch(logout());
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Gagal mengubah password.';
+      Alert.alert('Error', msg);
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleChangeProfilePicture = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled) {
+        setModalVisible(false); // Hide modal while uploading
+        const uri = result.assets[0].uri;
+        
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('image', {
+          uri,
+          name: 'profile.jpg',
+          type: 'image/jpeg',
+        } as any);
+
+        const res = await api.post('/users/profile-picture', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        Alert.alert('Success', 'Profile picture updated successfully!');
+        dispatch(asyncGetProfile()); // Refresh profile to get the new picture
+      }
+    } catch (err: any) {
+      console.log(err);
+      Alert.alert('Error', err?.message || 'Failed to update profile picture');
+    }
   };
 
   const handleLogout = () => {
@@ -80,16 +158,30 @@ export default function Profile() {
         <Text style={styles.username}>@{data?.username || 'username'}</Text>
         <Text style={styles.email}>{data?.email || 'email@example.com'}</Text>
 
+        {character && (
+          <View style={styles.characterContainer}>
+            <Text style={styles.sectionTitle}>Character Status</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>Lv {character.level}</Text>
+                <Text style={styles.statLabel}>{character.statusName}</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{character.healthPoint} HP</Text>
+                <Text style={styles.statLabel}>Health</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{character.xpPoint}/{character.xpToNextLevel}</Text>
+                <Text style={styles.statLabel}>XP</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {data?.role && (
           <View style={styles.roleContainer}>
             <Text style={styles.roleTitle}>Role: {data.role.name}</Text>
             <Text style={styles.roleDesc}>{data.role.description}</Text>
-            <Text style={styles.permissionTitle}>Permissions:</Text>
-            {data.role.permissions.map((perm, idx) => (
-              <Text key={idx} style={styles.permissionItem}>
-                - {perm.permission.name}: {perm.permission.description}
-              </Text>
-            ))}
           </View>
         )}
 
@@ -146,6 +238,87 @@ export default function Profile() {
               onPress={() => setModalVisible(false)}
             >
               <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Ganti Password */}
+      <Modal visible={pwModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalBackground}>
+          <View style={[styles.modalContent, { padding: 24, gap: 12 }]}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#111', marginBottom: 4 }}>
+              🔑 Ganti Password
+            </Text>
+
+            {/* Current Password */}
+            <Text style={styles.inputLabel}>Password Lama</Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Masukkan password lama"
+                placeholderTextColor="#aaa"
+                secureTextEntry={!showCurrent}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowCurrent(v => !v)} style={styles.eyeBtn}>
+                <Text style={styles.eyeText}>{showCurrent ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* New Password */}
+            <Text style={styles.inputLabel}>Password Baru</Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Minimal 6 karakter"
+                placeholderTextColor="#aaa"
+                secureTextEntry={!showNew}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowNew(v => !v)} style={styles.eyeBtn}>
+                <Text style={styles.eyeText}>{showNew ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Confirm Password */}
+            <Text style={styles.inputLabel}>Konfirmasi Password Baru</Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Ulangi password baru"
+                placeholderTextColor="#aaa"
+                secureTextEntry={!showConfirm}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={styles.eyeBtn}>
+                <Text style={styles.eyeText}>{showConfirm ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Buttons */}
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: tint, marginTop: 8 }]}
+              onPress={handleSubmitChangePassword}
+              disabled={pwLoading}
+            >
+              {pwLoading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.buttonText}>Simpan Password</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#9CA3AF' }]}
+              onPress={() => setPwModalVisible(false)}
+              disabled={pwLoading}
+            >
+              <Text style={styles.buttonText}>Batal</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,6 +404,52 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#666666',
   },
+  characterContainer: {
+    width: '100%',
+    marginTop: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3B82F6',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
   buttonContainer: {
     width: '100%',
     marginTop: 20,
@@ -278,5 +497,34 @@ const styles = StyleSheet.create({
     borderRadius: 125,
     borderWidth: 3,
     borderColor: '#FF6B6B',
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#444',
+    marginBottom: 4,
+    alignSelf: 'flex-start',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 12,
+    width: '100%',
+  },
+  textInput: {
+    flex: 1,
+    height: 46,
+    fontSize: 15,
+    color: '#111',
+  },
+  eyeBtn: {
+    padding: 6,
+  },
+  eyeText: {
+    fontSize: 18,
   },
 });

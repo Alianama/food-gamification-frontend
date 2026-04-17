@@ -23,17 +23,12 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
 
   const dispatch = useDispatch<AppDispatch>();
-  const { accessToken, loading, error } = useSelector((s: RootState) => s.auth);
+  const { loading, error } = useSelector((s: RootState) => s.profile);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
 
-  useEffect(() => {
-    if (accessToken) {
-      showSuccess('Registrasi berhasil!');
-      router.replace('/(tabs)');
-    }
-  }, [accessToken, router]);
+
 
   useEffect(() => {
     if (error) {
@@ -41,12 +36,18 @@ export default function RegisterScreen() {
     }
   }, [error]);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!username || !fullName || !email || !password) {
       showError('Semua field wajib diisi');
       return;
     }
-    dispatch(asyncCreateUser({ username, fullName, email, password }));
+    try {
+      await dispatch(asyncCreateUser({ username, fullName, email, password })).unwrap();
+      showSuccess('Registrasi berhasil! Silakan masuk.');
+      router.replace('/login');
+    } catch (e) {
+      // error is caught in useEffect via Redux state
+    }
   };
 
   const handleLogin = () => {

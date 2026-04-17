@@ -215,47 +215,63 @@ export default function UploadModal({
           {/* Result State */}
           {!loading && data && (
             <>
-              <View style={styles.resultCard}>
-                <Text style={styles.resultFoodTitle}>
-                  🍽 {data?.data?.predictions?.predicted_food || 'Makanan'}
-                </Text>
+              {data?.data?.predictions?.predicted_food === 'Unknown Food' ? (
+                <View style={styles.resultCard}>
+                  <Text style={[styles.resultFoodTitle, { color: '#ef4444' }]}>
+                    ❌ Objek Tidak Dikenali
+                  </Text>
+                  <Text style={{ textAlign: 'center', color: '#6b7280', marginBottom: 15 }}>
+                    Sistem tidak dapat mendeteksi makanan pada foto ini, atau kualitas foto terlalu rendah. Harap ambil ulang foto yang lebih jelas.
+                  </Text>
+                  <Pressable style={styles.buttonDanger} onPress={onClose}>
+                    <Text style={styles.buttonText}>Kembali & Coba Lagi</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.resultCard}>
+                    <Text style={styles.resultFoodTitle}>
+                      🍽 {data?.data?.predictions?.predicted_food || 'Makanan'}
+                    </Text>
 
-                {nutrition &&
-                  Object.entries(nutrition).map(([key, value]) => {
-                    const item = nutritionLabels[key];
-                    if (!item) return null;
+                    {nutrition &&
+                      Object.entries(nutrition).map(([key, value]) => {
+                        const item = nutritionLabels[key];
+                        if (!item) return null;
 
-                    return (
-                      <View key={key} style={styles.nutritionRow}>
-                        <Text style={[styles.nutritionLabel, { backgroundColor: item.bg }]}>
-                          {item.emoji} {item.label}
-                        </Text>
-                        <Text style={styles.nutritionValue}>
-                          {typeof value === 'string' || typeof value === 'number' ? value : '-'} g
-                        </Text>
-                      </View>
-                    );
-                  })}
-              </View>
+                        return (
+                          <View key={key} style={styles.nutritionRow}>
+                            <Text style={[styles.nutritionLabel, { backgroundColor: item.bg }]}>
+                              {item.emoji} {item.label}
+                            </Text>
+                            <Text style={styles.nutritionValue}>
+                              {typeof value === 'string' || typeof value === 'number' ? value : '-'} g
+                            </Text>
+                          </View>
+                        );
+                      })}
+                  </View>
 
-              <Pressable style={[styles.buttonPrimary, { marginTop: 28 }]} onPress={onConfirm}>
-                <Animated.View style={{ transform: [{ rotate }], marginBottom: 10 }}>
-                  <FeedSVG width={35} height={35} />
-                </Animated.View>
-                <Text style={styles.buttonText}>Feed Character</Text>
-              </Pressable>
-              <LottieView
-                ref={confettiRef}
-                source={require('@/assets/lottie/Confetti.json')}
-                autoPlay={false}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  position: 'absolute',
-                  top: -50,
-                }}
-                loop={false}
-              />
+                  <Pressable style={[styles.buttonPrimary, { marginTop: 28 }]} onPress={onConfirm}>
+                    <Animated.View style={{ transform: [{ rotate }], marginBottom: 10 }}>
+                      <FeedSVG width={35} height={35} />
+                    </Animated.View>
+                    <Text style={styles.buttonText}>Feed Character</Text>
+                  </Pressable>
+                  <LottieView
+                    ref={confettiRef}
+                    source={require('@/assets/lottie/Confetti.json')}
+                    autoPlay={false}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'absolute',
+                      top: -50,
+                    }}
+                    loop={false}
+                  />
+                </>
+              )}
             </>
           )}
 

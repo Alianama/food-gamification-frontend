@@ -18,6 +18,14 @@ export interface Role {
   permissions: PermissionItem[];
 }
 
+export interface CharacterData {
+  level: number;
+  healthPoint: number;
+  xpPoint: number;
+  xpToNextLevel: number;
+  statusName: string;
+}
+
 export interface ProfileData {
   id: number;
   username: string;
@@ -27,6 +35,7 @@ export interface ProfileData {
   createdAt: string;
   updatedAt: string;
   role: Role;
+  character?: CharacterData;
 }
 
 export interface ProfileState {

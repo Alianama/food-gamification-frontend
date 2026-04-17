@@ -15,6 +15,7 @@ export default function StatsScreen() {
 
   const data = stats?.data;
   const character = data?.character;
+  const summary = data?.summary;
   const averages = data?.averages;
   const healthInfo = data?.health;
   const weeklyBreakdown = data?.weeklyBreakdown;
@@ -33,8 +34,32 @@ export default function StatsScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Character Stats */}
+
+      {/* Activity Summary */}
       <View style={[styles.neuDark, { marginTop: 20 }]}>
+        <View style={[styles.neuLight, styles.card]}>
+          <Text style={styles.title}>Ringkasan Aktivitas</Text>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+            <View style={[styles.summaryBox, { backgroundColor: '#F3F4F6' }]}>
+              <Text style={styles.summaryCount}>{summary?.totalScanned ?? 0}</Text>
+              <Text style={styles.summaryLabel}>📷 Total Scan</Text>
+            </View>
+            <View style={[styles.summaryBox, { backgroundColor: '#D1FAE5' }]}>
+              <Text style={[styles.summaryCount, { color: '#065F46' }]}>{summary?.totalConsumed ?? 0}</Text>
+              <Text style={[styles.summaryLabel, { color: '#065F46' }]}>🍽️ Dikonsumsi</Text>
+            </View>
+            <View style={[styles.summaryBox, { backgroundColor: '#FEF3C7' }]}>
+              <Text style={[styles.summaryCount, { color: '#92400E' }]}>
+                {(summary?.totalScanned ?? 0) - (summary?.totalConsumed ?? 0)}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: '#92400E' }]}>🔍 Hanya Scan</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Character Stats */}
+      <View style={styles.neuDark}>
         <View style={[styles.neuLight, styles.card]}>
           <Text style={styles.title}>Character Stats</Text>
 
@@ -228,5 +253,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0F172A',
     marginBottom: 8,
+  },
+  summaryBox: {
+    flex: 1,
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+  },
+  summaryCount: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#111',
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#555',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

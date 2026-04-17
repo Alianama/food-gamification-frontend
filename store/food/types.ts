@@ -34,6 +34,8 @@ export interface FoodPeriod {
 
 export interface FoodSummaryTotals {
   totalEntries: number;
+  totalScanned: number;
+  totalConsumed: number;
   totalCalories: number;
   totalCarbohydrate: number;
   totalFat: number;

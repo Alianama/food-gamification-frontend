@@ -30,7 +30,6 @@ export const asyncCreateUser = createAsyncThunk<
 >('profile/createUser', async (userData, { rejectWithValue }) => {
   try {
     const res = await api.post<ProfileApiResponse>('/users/add', userData);
-    router.replace('/(tabs)');
     return res.data;
   } catch (error: any) {
     const message = error?.response?.data?.message || 'Gagal membuat user';

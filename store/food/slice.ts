@@ -62,7 +62,8 @@ const foodSlice = createSlice({
     clearFoodData(state) {
       state.predictedData = null;
       state.confirmedData = null;
-      state.stats = null;
+      // NOTE: Jangan reset stats di sini! Resetnya akan menyebabkan
+      // Home screen terus refetch (infinite loop) selama modal terbuka.
       state.error = null;
       state.confirmSuccess = false;
     },
@@ -132,5 +133,5 @@ const foodSlice = createSlice({
   },
 });
 
-export const { clearFoodData } = foodSlice.actions;
+export const { clearFoodData, clearStats } = foodSlice.actions;
 export default foodSlice.reducer;

@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 
-const API_URL = process.env.EXPO_PUBLIC_BASE_URL || 'http://localhost:8000';
+const API_URL = process.env.EXPO_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 class ApiService {
-  private api: any;
+  private api: AxiosInstance;
 
   constructor(baseURL: string) {
-    this.api = axios.create({ baseURL });
+    this.api = axios.create({ baseURL, timeout: 30000 });
 
     this.api.interceptors.request.use(
       async (config: any) => {
@@ -15,7 +15,14 @@ class ApiService {
         if (token && config.headers) {
           config.headers['Authorization'] = `Bearer ${token}`;
         }
+        // Always accept JSON responses
         config.headers = { ...config.headers, Accept: 'application/json' };
+        // If sending FormData, let axios/RN set correct boundary; just set content-type hint
+        const isFormData =
+          typeof FormData !== 'undefined' && config.data && config.data instanceof FormData;
+        if (isFormData) {
+          config.headers['Content-Type'] = 'multipart/form-data';
+        }
         return config;
       },
       (error: any) => {
@@ -26,12 +33,29 @@ class ApiService {
 
     this.api.interceptors.response.use(
       (response: any) => response,
-      (error: any) => {
-        const message = axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : error?.message || 'Network error';
-        console.log(message);
-        return Promise.reject(error);
+      (error: AxiosError) => {
+        const hasResponse = !!error.response;
+        const method = (error.config?.method || 'GET').toUpperCase();
+        const urlPath = error.config?.url || '';
+        const baseURL = error.config?.baseURL || API_URL;
+        const fallbackMessage = 'Network error';
+
+        const serverMessage = hasResponse
+          ? (error.response?.data as any)?.message ||
+            (error.response?.data as any)?.error ||
+            error.message ||
+            fallbackMessage
+          : `${fallbackMessage}: ${method} ${baseURL}${urlPath}`;
+
+        const normalizedError: any = new Error(serverMessage);
+        normalizedError.status = error.response?.status;
+        normalizedError.code = (error as any).code;
+        normalizedError.response = error.response;
+        normalizedError.method = method;
+        normalizedError.url = `${baseURL}${urlPath}`;
+
+        console.log(serverMessage);
+        return Promise.reject(normalizedError);
       },
     );
   }

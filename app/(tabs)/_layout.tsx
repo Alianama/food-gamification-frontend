@@ -3,13 +3,14 @@ import UploadModal from '@/components/upload-modal';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { RootState } from '@/store';
-import { asyncConfirmFood, asyncFoodDetection, clearFoodData } from '@/store/food/slice';
+import { asyncConfirmFood, asyncFoodDetection, asyncGetCharacterStats, clearFoodData } from '@/store/food/slice';
+import { asyncGetProfile } from '@/store/profile/slice';
 import { showError, showSuccess } from '@/utils/toast';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { Slot, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 export default function TabLayout() {
@@ -54,7 +55,12 @@ export default function TabLayout() {
 
   const handleTakePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return showError('Izin kamera dibutuhkan!');
+    if (!permission.granted) {
+      if (!permission.canAskAgain) {
+        return Alert.alert('Akses Diblokir', 'Akses kamera diblokir sistem. Harap izinkan melalui Pengaturan HP.');
+      }
+      return Alert.alert('Izin Dibutuhkan', 'Izin kamera dibutuhkan untuk memindai!');
+    }
 
     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!result.canceled) {
@@ -66,7 +72,7 @@ export default function TabLayout() {
 
   const handlePickGallery = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return showError('Izin galeri dibutuhkan!');
+    if (!permission.granted) return Alert.alert('Izin Dibutuhkan', 'Izin galeri dibutuhkan untuk mengunggah!');
 
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
     if (!result.canceled) {
@@ -82,6 +88,10 @@ export default function TabLayout() {
       return;
     }
     await dispatch(asyncConfirmFood(predictedData.data.foodHistoryId));
+    // Refresh both stats (Home) and profile (Profile) so XP is in sync everywhere
+    dispatch(asyncGetCharacterStats());
+    dispatch(asyncGetProfile());
+    resetModal();
   };
 
   const handleUpload = async () => {
