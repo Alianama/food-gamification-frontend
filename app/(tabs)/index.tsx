@@ -8,6 +8,7 @@ import { asyncGetCharacterStats } from '@/store/food/slice';
 import { useAppDispatch } from '@/store/hook';
 import { CHARACTERS, loadThemeSettings, setCharacter, setTheme, THEMES } from '@/store/theme/slice';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const { confirmedData, stats } = useSelector((state: RootState) => state.food);
   const { themeId, characterId, loaded } = useSelector((state: RootState) => state.theme);
+  const router = useRouter();
 
   const [themePickerVisible, setThemePickerVisible] = useState(false);
   const [charPickerVisible, setCharPickerVisible] = useState(false);
@@ -51,6 +53,9 @@ export default function HomeScreen() {
 
       {/* Floating Header Buttons */}
       <View style={styles.headerBtns}>
+        <Pressable style={styles.iconBtn} onPress={() => router.push('/log')}>
+          <Ionicons name="list" size={20} color="#1F2937" />
+        </Pressable>
         <Pressable style={styles.iconBtn} onPress={() => setCharPickerVisible(true)}>
           <Ionicons name="paw" size={20} color="#1F2937" />
         </Pressable>
