@@ -29,6 +29,7 @@ export default function Profile() {
   const character = foodStats?.data?.character ?? data?.character;
   const [modalVisible, setModalVisible] = useState(false);
   const [pwModalVisible, setPwModalVisible] = useState(false);
+  const [imageKey, setImageKey] = useState(Date.now());
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -101,6 +102,7 @@ export default function Profile() {
         });
 
         Alert.alert('Success', 'Profile picture updated successfully!');
+        setImageKey(Date.now());
         dispatch(asyncGetProfile());
       }
     } catch (err: any) {
@@ -146,7 +148,7 @@ export default function Profile() {
       <LinearGradient colors={['#667eea', '#764ba2']} style={styles.headerGradient}>
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.avatarWrapper}>
           <Image
-            source={{ uri: data?.profilePicture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(data?.fullName || 'U') + '&background=ffffff&color=667eea&size=200' }}
+            source={{ uri: data?.profilePicture ? `${data.profilePicture}?t=${imageKey}` : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(data?.fullName || 'U') + '&background=ffffff&color=667eea&size=200' }}
             style={styles.avatar}
           />
           <View style={styles.avatarEditBadge}>
@@ -272,7 +274,7 @@ export default function Profile() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Profile Picture</Text>
             <Image
-              source={{ uri: data?.profilePicture || '' }}
+              source={{ uri: data?.profilePicture ? `${data.profilePicture}?t=${imageKey}` : '' }}
               style={styles.modalImage}
             />
             <TouchableOpacity

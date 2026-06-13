@@ -20,17 +20,9 @@ export default function RootLayout() {
             name="login"
             options={{
               headerShown: false,
-              statusBarStyle: 'dark',
             }}
           />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="modal"
-            options={{
-              presentation: 'modal',
-              title: 'Modal',
-            }}
-          />
         </Stack>
         <StatusBar style="dark" />
         <Toast />

@@ -3,12 +3,14 @@ import authReducer from './auth/slice';
 import foodReducer from './food/slice';
 import profileReducer from './profile/slice';
 import achievementReducer from './achievement/slice';
+import themeReducer from './theme/slice';
 
 const appReducer = combineReducers({
   auth: authReducer,
   food: foodReducer,
   profile: profileReducer,
   achievement: achievementReducer,
+  theme: themeReducer,
 });
 
 const rootReducer = (state: any, action: Action) => {
