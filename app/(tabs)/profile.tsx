@@ -3,6 +3,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { RootState } from '@/store';
 import { logout } from '@/store/auth/slice';
 import { asyncGetProfile } from '@/store/profile/slice';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,14 +21,10 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '@/utils/api';
-import KeySVG from '../../assets/icons/key.svg';
-import LogoutSVG from '../../assets/icons/logout.svg';
 
 export default function Profile() {
   const dispatch = useDispatch<any>();
   const { data, loading, error } = useSelector((state: RootState) => state.profile);
-  // Ambil data karakter dari food/stats jika ada (lebih real-time setelah feed)
-  // fallback ke data dari profile API
   const foodStats = useSelector((state: RootState) => state.food.stats);
   const character = foodStats?.data?.character ?? data?.character;
   const [modalVisible, setModalVisible] = useState(false);
@@ -89,10 +87,8 @@ export default function Profile() {
       });
 
       if (!result.canceled) {
-        setModalVisible(false); // Hide modal while uploading
+        setModalVisible(false);
         const uri = result.assets[0].uri;
-        
-        // Prepare FormData
         const formData = new FormData();
         formData.append('image', {
           uri,
@@ -100,17 +96,14 @@ export default function Profile() {
           type: 'image/jpeg',
         } as any);
 
-        const res = await api.post('/users/profile-picture', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        await api.post('/users/profile-picture', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         Alert.alert('Success', 'Profile picture updated successfully!');
-        dispatch(asyncGetProfile()); // Refresh profile to get the new picture
+        dispatch(asyncGetProfile());
       }
     } catch (err: any) {
-      console.log(err);
       Alert.alert('Error', err?.message || 'Failed to update profile picture');
     }
   };
@@ -121,204 +114,277 @@ export default function Profile() {
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () => {
-          dispatch(logout());
-        },
+        onPress: () => dispatch(logout()),
       },
     ]);
   };
 
+  const xpProgress = character ? (character.xpPoint / character.xpToNextLevel) * 100 : 0;
+  const hpProgress = character ? Math.min(character.healthPoint, 100) : 0;
+
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#667eea" />
+        <Text style={styles.loadingText}>Loading Profile...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.errorText}>Error: {error}</Text>
+      <View style={[styles.container, styles.center]}>
+        <Ionicons name="alert-circle" size={48} color="#EF4444" />
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Profile Header Card */}
+      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.headerGradient}>
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.avatarWrapper}>
           <Image
-            source={{ uri: data?.profilePicture || 'https://via.placeholder.com/120' }}
+            source={{ uri: data?.profilePicture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(data?.fullName || 'U') + '&background=ffffff&color=667eea&size=200' }}
             style={styles.avatar}
           />
+          <View style={styles.avatarEditBadge}>
+            <Ionicons name="camera" size={14} color="#fff" />
+          </View>
         </TouchableOpacity>
 
         <Text style={styles.name}>{data?.fullName || 'Nama User'}</Text>
         <Text style={styles.username}>@{data?.username || 'username'}</Text>
-        <Text style={styles.email}>{data?.email || 'email@example.com'}</Text>
-
-        {character && (
-          <View style={styles.characterContainer}>
-            <Text style={styles.sectionTitle}>Character Status</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>Lv {character.level}</Text>
-                <Text style={styles.statLabel}>{character.statusName}</Text>
-              </View>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{character.healthPoint} HP</Text>
-                <Text style={styles.statLabel}>Health</Text>
-              </View>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{character.xpPoint}/{character.xpToNextLevel}</Text>
-                <Text style={styles.statLabel}>XP</Text>
-              </View>
-            </View>
-          </View>
-        )}
+        <View style={styles.emailRow}>
+          <Ionicons name="mail-outline" size={14} color="rgba(255,255,255,0.75)" />
+          <Text style={styles.email}>{data?.email || 'email@example.com'}</Text>
+        </View>
 
         {data?.role && (
-          <View style={styles.roleContainer}>
-            <Text style={styles.roleTitle}>Role: {data.role.name}</Text>
-            <Text style={styles.roleDesc}>{data.role.description}</Text>
+          <View style={styles.roleBadge}>
+            <Ionicons name="shield-checkmark-outline" size={12} color="#667eea" />
+            <Text style={styles.roleBadgeText}>{data.role.name}</Text>
           </View>
         )}
+      </LinearGradient>
 
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor: tint,
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                gap: 8,
-              },
-            ]}
-            onPress={handleChangePassword}
-          >
-            <KeySVG width={22} height={22} />
-            <Text style={styles.buttonText}>Change Password</Text>
-          </TouchableOpacity>
+      {/* Character Stats */}
+      {character && (
+        <View style={styles.statsCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="game-controller" size={20} color="#667eea" />
+            <Text style={styles.sectionTitle}>Character Status</Text>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelBadgeText}>Lv.{character.level}</Text>
+            </View>
+          </View>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor: '#FF6B6B',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-              },
-            ]}
-            onPress={handleLogout}
-          >
-            <LogoutSVG width={22} height={22} style={{ marginBottom: -3, marginRight: 8 }} />
-            <Text style={styles.buttonText}>Logout</Text>
-          </TouchableOpacity>
+          <View style={styles.statusRow}>
+            <Ionicons name="person" size={14} color="#9CA3AF" />
+            <Text style={styles.statusText}>{character.statusName}</Text>
+          </View>
+
+          {/* HP Bar */}
+          <View style={styles.barSection}>
+            <View style={styles.barLabelRow}>
+              <View style={styles.barLabelLeft}>
+                <Ionicons name="heart" size={14} color="#EF4444" />
+                <Text style={styles.barLabel}>Health Points</Text>
+              </View>
+              <Text style={styles.barValue}>{character.healthPoint} HP</Text>
+            </View>
+            <View style={styles.barBg}>
+              <LinearGradient
+                colors={['#FF6B6B', '#EF4444']}
+                style={[styles.barFill, { width: `${hpProgress}%` as any }]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              />
+            </View>
+          </View>
+
+          {/* XP Bar */}
+          <View style={styles.barSection}>
+            <View style={styles.barLabelRow}>
+              <View style={styles.barLabelLeft}>
+                <Ionicons name="flash" size={14} color="#F59E0B" />
+                <Text style={styles.barLabel}>Experience</Text>
+              </View>
+              <Text style={styles.barValue}>{character.xpPoint}/{character.xpToNextLevel} XP</Text>
+            </View>
+            <View style={styles.barBg}>
+              <LinearGradient
+                colors={['#FFD93D', '#F59E0B']}
+                style={[styles.barFill, { width: `${Math.min(xpProgress, 100)}%` as any }]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              />
+            </View>
+          </View>
+
+          {/* Stat chips */}
+          <View style={styles.statChipsRow}>
+            <View style={[styles.statChip, { backgroundColor: '#EFF6FF' }]}>
+              <Ionicons name="trending-up" size={16} color="#3B82F6" />
+              <Text style={[styles.statChipValue, { color: '#3B82F6' }]}>Lv.{character.level}</Text>
+              <Text style={styles.statChipLabel}>Level</Text>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: '#FFF7ED' }]}>
+              <Ionicons name="flash" size={16} color="#F59E0B" />
+              <Text style={[styles.statChipValue, { color: '#F59E0B' }]}>{character.xpPoint}</Text>
+              <Text style={styles.statChipLabel}>XP</Text>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: '#FEF2F2' }]}>
+              <Ionicons name="heart" size={16} color="#EF4444" />
+              <Text style={[styles.statChipValue, { color: '#EF4444' }]}>{character.healthPoint}</Text>
+              <Text style={styles.statChipLabel}>HP</Text>
+            </View>
+          </View>
         </View>
+      )}
+
+      {/* Action Buttons */}
+      <View style={styles.actionsCard}>
+        <TouchableOpacity style={styles.actionRow} onPress={handleChangePassword}>
+          <View style={[styles.actionIcon, { backgroundColor: '#EFF6FF' }]}>
+            <Ionicons name="key" size={20} color="#3B82F6" />
+          </View>
+          <Text style={styles.actionText}>Change Password</Text>
+          <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+        </TouchableOpacity>
+
+        <View style={styles.actionDivider} />
+
+        <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
+          <View style={[styles.actionIcon, { backgroundColor: '#FEF2F2' }]}>
+            <Ionicons name="log-out" size={20} color="#EF4444" />
+          </View>
+          <Text style={[styles.actionText, { color: '#EF4444' }]}>Logout</Text>
+          <Ionicons name="chevron-forward" size={18} color="#EF4444" />
+        </TouchableOpacity>
       </View>
 
-      {/* Modal untuk lihat foto profil */}
+      {/* Bottom spacing */}
+      <View style={{ height: 100 }} />
+
+      {/* Modal: View/Change Profile Picture */}
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
-            <Image source={{ uri: data?.profilePicture || '' }} style={styles.modalImage} />
+            <Text style={styles.modalTitle}>Profile Picture</Text>
+            <Image
+              source={{ uri: data?.profilePicture || '' }}
+              style={styles.modalImage}
+            />
             <TouchableOpacity
-              style={[styles.button, { width: '80%', marginTop: 15, backgroundColor: tint }]}
+              style={[styles.modalButton, { backgroundColor: tint }]}
               onPress={handleChangeProfilePicture}
             >
-              <Text style={styles.buttonText}>Change Profile Picture</Text>
+              <Ionicons name="image" size={18} color="#fff" />
+              <Text style={styles.modalButtonText}>Change Picture</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, { width: '80%', backgroundColor: '#ff4d4d', marginTop: 10 }]}
+              style={[styles.modalButton, { backgroundColor: '#F3F4F6' }]}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.buttonText}>Close</Text>
+              <Ionicons name="close" size={18} color="#374151" />
+              <Text style={[styles.modalButtonText, { color: '#374151' }]}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Modal Ganti Password */}
+      {/* Modal: Change Password */}
       <Modal visible={pwModalVisible} transparent={true} animationType="slide">
         <View style={styles.modalBackground}>
           <View style={[styles.modalContent, { padding: 24, gap: 12 }]}>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: '#111', marginBottom: 4 }}>
-              🔑 Ganti Password
-            </Text>
+            <View style={styles.pwModalHeader}>
+              <View style={styles.pwModalIconBg}>
+                <Ionicons name="key" size={24} color="#667eea" />
+              </View>
+              <Text style={styles.pwModalTitle}>Change Password</Text>
+              <Text style={styles.pwModalSubtitle}>Enter your current and new password</Text>
+            </View>
 
             {/* Current Password */}
-            <Text style={styles.inputLabel}>Password Lama</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Masukkan password lama"
-                placeholderTextColor="#aaa"
-                secureTextEntry={!showCurrent}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity onPress={() => setShowCurrent(v => !v)} style={styles.eyeBtn}>
-                <Text style={styles.eyeText}>{showCurrent ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
+            <View>
+              <Text style={styles.inputLabel}>Current Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter current password"
+                  placeholderTextColor="#aaa"
+                  secureTextEntry={!showCurrent}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowCurrent(v => !v)} style={styles.eyeBtn}>
+                  <Ionicons name={showCurrent ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* New Password */}
-            <Text style={styles.inputLabel}>Password Baru</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Minimal 6 karakter"
-                placeholderTextColor="#aaa"
-                secureTextEntry={!showNew}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity onPress={() => setShowNew(v => !v)} style={styles.eyeBtn}>
-                <Text style={styles.eyeText}>{showNew ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
+            <View>
+              <Text style={styles.inputLabel}>New Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="lock-open-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Min. 6 characters"
+                  placeholderTextColor="#aaa"
+                  secureTextEntry={!showNew}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowNew(v => !v)} style={styles.eyeBtn}>
+                  <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Confirm Password */}
-            <Text style={styles.inputLabel}>Konfirmasi Password Baru</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Ulangi password baru"
-                placeholderTextColor="#aaa"
-                secureTextEntry={!showConfirm}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={styles.eyeBtn}>
-                <Text style={styles.eyeText}>{showConfirm ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
+            <View>
+              <Text style={styles.inputLabel}>Confirm New Password</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Repeat new password"
+                  placeholderTextColor="#aaa"
+                  secureTextEntry={!showConfirm}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={styles.eyeBtn}>
+                  <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Buttons */}
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: tint, marginTop: 8 }]}
+              style={[styles.pwSaveButton, { backgroundColor: '#667eea' }]}
               onPress={handleSubmitChangePassword}
               disabled={pwLoading}
             >
               {pwLoading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.buttonText}>Simpan Password</Text>
+                : <>
+                    <Ionicons name="save-outline" size={18} color="#fff" />
+                    <Text style={styles.pwSaveButtonText}>Save Password</Text>
+                  </>
               }
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#9CA3AF' }]}
+              style={[styles.pwCancelButton]}
               onPress={() => setPwModalVisible(false)}
               disabled={pwLoading}
             >
-              <Text style={styles.buttonText}>Batal</Text>
+              <Text style={styles.pwCancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -330,201 +396,361 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    marginTop: 40,
+    backgroundColor: '#F8FAFC',
   },
-  card: {
-    borderRadius: 25,
-    padding: 25,
+  center: {
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    shadowColor: '#000000',
-    shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
-    marginBottom: 20,
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    color: '#667eea',
+    fontWeight: '600',
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 15,
+    color: '#EF4444',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+
+  // Header Gradient
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 32,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginBottom: 16,
   },
   avatar: {
-    width: 130,
-    height: 130,
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-    borderRadius: 65,
-    marginBottom: 20,
-    borderWidth: 3,
-    borderColor: '#ffffff',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.8)',
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#667eea',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   name: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 5,
-    color: '#222222',
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 4,
   },
   username: {
-    fontSize: 16,
-    color: '#666666',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
     marginBottom: 8,
   },
-  email: {
-    fontSize: 14,
-    color: '#888888',
-    marginBottom: 15,
-  },
-  roleContainer: {
-    width: '100%',
-    marginTop: 20,
-    padding: 20,
-    borderRadius: 20,
-    backgroundColor: '#f9f9f9',
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  roleTitle: {
-    fontWeight: '700',
-    fontSize: 17,
-    marginBottom: 6,
-    color: '#333333',
-  },
-  roleDesc: {
-    fontSize: 14,
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     marginBottom: 12,
-    color: '#555555',
   },
-  permissionTitle: {
-    fontWeight: '600',
-    marginBottom: 6,
-    color: '#444444',
-  },
-  permissionItem: {
+  email: {
     fontSize: 13,
-    marginLeft: 12,
-    marginBottom: 4,
-    color: '#666666',
+    color: 'rgba(255,255,255,0.75)',
   },
-  characterContainer: {
-    width: '100%',
-    marginTop: 20,
-    backgroundColor: '#ffffff',
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  roleBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#667eea',
+  },
+
+  // Stats Card
+  statsCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
     borderRadius: 20,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  statBox: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    backgroundColor: '#F9FAFB',
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  levelBadge: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
   },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 4,
+  levelBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
   },
-  statLabel: {
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 14,
+  },
+  statusText: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+
+  // Bars
+  barSection: {
+    marginBottom: 12,
+  },
+  barLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  barLabelLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  barLabel: {
+    fontSize: 12,
+    color: '#374151',
+    fontWeight: '600',
+  },
+  barValue: {
     fontSize: 12,
     color: '#6B7280',
     fontWeight: '600',
+  },
+  barBg: {
+    width: '100%',
+    height: 10,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+
+  // Stat Chips
+  statChipsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  statChip: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    gap: 3,
+  },
+  statChipValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  statChipLabel: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    fontWeight: '600',
     textTransform: 'uppercase',
   },
-  buttonContainer: {
-    width: '100%',
-    marginTop: 20,
-  },
-  button: {
-    paddingVertical: 12,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginBottom: 12,
+
+  // Actions Card
+  actionsCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    paddingHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  buttonText: {
-    color: '#ffffff',
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 12,
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionText: {
+    flex: 1,
+    fontSize: 15,
     fontWeight: '600',
-    fontSize: 16,
+    color: '#111827',
   },
-  loadingText: {
-    fontSize: 18,
-    color: '#555555',
+  actionDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
   },
-  errorText: {
-    fontSize: 18,
-    color: '#ff4d4d',
-  },
+
+  // Modals
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    width: '90%',
-    backgroundColor: '#ffffff',
-    borderRadius: 25,
+    width: '88%',
+    backgroundColor: '#fff',
+    borderRadius: 24,
     padding: 20,
     alignItems: 'center',
+    gap: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
   },
   modalImage: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     borderWidth: 3,
-    borderColor: '#FF6B6B',
+    borderColor: '#667eea',
+    marginVertical: 8,
+  },
+  modalButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+
+  // Password Modal
+  pwModalHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  pwModalIconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pwModalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  pwModalSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
   },
   inputLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#444',
-    marginBottom: 4,
-    alignSelf: 'flex-start',
+    color: '#374151',
+    marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: '#F9FAFB',
-    paddingHorizontal: 12,
-    width: '100%',
+    paddingHorizontal: 10,
+  },
+  inputIcon: {
+    marginRight: 6,
   },
   textInput: {
     flex: 1,
-    height: 46,
+    height: 48,
     fontSize: 15,
     color: '#111',
   },
   eyeBtn: {
     padding: 6,
   },
-  eyeText: {
-    fontSize: 18,
+  pwSaveButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  pwSaveButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  pwCancelButton: {
+    width: '100%',
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  pwCancelButtonText: {
+    color: '#374151',
+    fontWeight: '700',
+    fontSize: 15,
   },
 });

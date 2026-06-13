@@ -69,11 +69,11 @@ export default function CustomBottomBar({ onCameraPress }: CustomBottomBarProps)
   })();
 
   const tabs = [
-    { name: 'index', icon: 'home-outline', label: 'Home' },
-    { name: 'stats', icon: 'bar-chart-outline', label: 'Stats' },
-    { name: 'camera', icon: 'camera-outline', isCenter: true, label: 'Camera' },
-    { name: 'log', icon: 'list-outline', label: 'Log' },
-    { name: 'profile', icon: 'person-outline', label: 'Profile' },
+    { name: 'index', iconDefault: 'home-outline', iconActive: 'home', label: 'Home' },
+    { name: 'stats', iconDefault: 'bar-chart-outline', iconActive: 'bar-chart', label: 'Stats' },
+    { name: 'camera', iconDefault: 'camera-outline', iconActive: 'camera', isCenter: true, label: 'Scan' },
+    { name: 'explore', iconDefault: 'trophy-outline', iconActive: 'trophy', label: 'Awards' },
+    { name: 'profile', iconDefault: 'person-outline', iconActive: 'person', label: 'Profile' },
   ];
 
   const onPressTab = (route: string) => {
@@ -110,11 +110,11 @@ export default function CustomBottomBar({ onCameraPress }: CustomBottomBarProps)
         onPress={() => onPressTab(tab.name)}
       >
         <Ionicons
-          name={tab.icon as any}
-          size={24}
-          color={isActive ? themeColors.tint : 'rgba(0,0,0,0.5)'}
+          name={(isActive ? tab.iconActive : tab.iconDefault) as any}
+          size={22}
+          color={isActive ? themeColors.tint : 'rgba(0,0,0,0.4)'}
         />
-        <Text style={[styles.tabLabel, { color: isActive ? themeColors.tint : 'rgba(0,0,0,0.5)' }]}>
+        <Text style={[styles.tabLabel, { color: isActive ? themeColors.tint : 'rgba(0,0,0,0.4)' }]}>
           {tab.label}
         </Text>
       </Pressable>
@@ -137,17 +137,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 16,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
+    height: 52,
     borderRadius: 24,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
-  tabLabel: { fontSize: 12, marginTop: 4 },
+  tabLabel: { fontSize: 10, marginTop: 3, fontWeight: '600' },
   centerButton: {
     width: 65,
     height: 65,
@@ -156,8 +161,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 60,
     shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
 });
