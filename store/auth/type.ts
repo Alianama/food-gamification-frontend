@@ -29,6 +29,9 @@ export type UserData = {
   username: string;
   fullName: string;
   email: string;
+  weight?: number;
+  height?: number;
+  lastBmiUpdate?: string;
   role: Role;
   accessToken: string;
   refreshToken: string;

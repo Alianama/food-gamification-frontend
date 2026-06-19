@@ -1,31 +1,43 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Warna utama diambil dari logo kamera:
+ * Primary Orange : #FF821D
+ * Dark Orange    : #F26200
+ * Light Orange   : #FF915B
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#ffd454';
-const tintColorDark = '#fff';
+// Brand colors — extracted from camera logo
+export const Brand = {
+  primary:   '#FF821D',  // orange utama
+  dark:      '#F26200',  // orange gelap (gradient end)
+  light:     '#FF915B',  // orange muda (accent)
+  pale:      '#FFF3E8',  // orange sangat muda (background tint)
+  gradient:  ['#FF821D', '#F26200'] as [string, string],
+  gradientLight: ['#FF915B', '#FF821D'] as [string, string],
+};
+
+const tintColorLight = Brand.primary;
+const tintColorDark  = Brand.primary;
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    secondaryBackground: '#8e00a1ff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text:                '#11181C',
+    background:          '#fff',
+    secondaryBackground: '#FF821D',
+    tint:                tintColorLight,
+    icon:                '#687076',
+    tabIconDefault:      '#687076',
+    tabIconSelected:     tintColorLight,
   },
   dark: {
-    text: '#11181C',
-    background: '#ffffffff',
-    secondaryBackground: '#37003eff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorDark,
+    text:                '#11181C',
+    background:          '#ffffffff',
+    secondaryBackground: '#F26200',
+    tint:                tintColorDark,
+    icon:                '#687076',
+    tabIconDefault:      '#687076',
+    tabIconSelected:     tintColorDark,
   },
 };
 

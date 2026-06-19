@@ -115,7 +115,7 @@ export default function LogScreen() {
       {/* Page Header */}
       <View style={styles.pageHeader}>
         <View style={styles.headerLeft}>
-          <Ionicons name="list" size={26} color="#667eea" />
+          <Ionicons name="list" size={26} color="#FF821D" />
           <Text style={[styles.heading, { color: themeColors.text }]}>Food Log</Text>
         </View>
         <TouchableOpacity
@@ -123,7 +123,7 @@ export default function LogScreen() {
           onPress={() => fetchHistory(true)}
           activeOpacity={0.7}
         >
-          <Ionicons name="refresh" size={18} color="#667eea" />
+          <Ionicons name="refresh" size={18} color="#FF821D" />
         </TouchableOpacity>
       </View>
 
@@ -147,7 +147,7 @@ export default function LogScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#667eea" />
+          <ActivityIndicator size="large" color="#FF821D" />
           <Text style={styles.loadingText}>Loading food history...</Text>
         </View>
       ) : (
@@ -161,7 +161,7 @@ export default function LogScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchHistory(true)}
-              tintColor="#667eea"
+              tintColor="#FF821D"
             />
           }
           ListEmptyComponent={
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#667eea',
+    color: '#FF821D',
     fontWeight: '600',
   },
   card: {

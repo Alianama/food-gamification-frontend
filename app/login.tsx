@@ -58,7 +58,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={['#FF821D', '#F26200']}
         style={styles.topGradient}
       >
         <Image
@@ -131,7 +131,7 @@ export default function LoginScreen() {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={loading ? ['#9CA3AF', '#9CA3AF'] : ['#667eea', '#764ba2']}
+            colors={loading ? ['#9CA3AF', '#9CA3AF'] : ['#FF821D', '#F26200']}
             style={styles.loginButtonGradient}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           >
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 8,
-    shadowColor: '#667eea',
+    shadowColor: '#FF821D',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerLink: {
-    color: '#667eea',
+    color: '#FF821D',
     fontSize: 14,
     fontWeight: '700',
   },

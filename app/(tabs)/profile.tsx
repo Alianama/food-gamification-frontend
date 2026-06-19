@@ -6,6 +6,7 @@ import { asyncGetProfile } from '@/store/profile/slice';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,6 +22,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '@/utils/api';
+import BmiModal from '@/components/bmi-modal';
 
 export default function Profile() {
   const dispatch = useDispatch<any>();
@@ -39,6 +41,11 @@ export default function Profile() {
   const [pwLoading, setPwLoading] = useState(false);
   const colorScheme = useColorScheme();
   const tint = colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint;
+  const router = useRouter();
+  const isAdmin = data?.role?.name?.toLowerCase() === 'admin' || data?.role?.name?.toLowerCase() === 'super_admin';
+  const userAuth = useSelector((state: RootState) => state.auth.user);
+
+  const [bmiModalVisible, setBmiModalVisible] = useState(false);
 
   useEffect(() => {
     dispatch(asyncGetProfile());
@@ -127,7 +134,7 @@ export default function Profile() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#667eea" />
+        <ActivityIndicator size="large" color="#FF821D" />
         <Text style={styles.loadingText}>Loading Profile...</Text>
       </View>
     );
@@ -145,7 +152,7 @@ export default function Profile() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile Header Card */}
-      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.headerGradient}>
+      <LinearGradient colors={['#FF821D', '#F26200']} style={styles.headerGradient}>
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.avatarWrapper}>
           <Image
             source={{ uri: data?.profilePicture ? `${data.profilePicture}?t=${imageKey}` : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(data?.fullName || 'U') + '&background=ffffff&color=667eea&size=200' }}
@@ -165,7 +172,7 @@ export default function Profile() {
 
         {data?.role && (
           <View style={styles.roleBadge}>
-            <Ionicons name="shield-checkmark-outline" size={12} color="#667eea" />
+            <Ionicons name="shield-checkmark-outline" size={12} color="#FF821D" />
             <Text style={styles.roleBadgeText}>{data.role.name}</Text>
           </View>
         )}
@@ -175,7 +182,7 @@ export default function Profile() {
       {character && (
         <View style={styles.statsCard}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="game-controller" size={20} color="#667eea" />
+            <Ionicons name="game-controller" size={20} color="#FF821D" />
             <Text style={styles.sectionTitle}>Character Status</Text>
             <View style={styles.levelBadge}>
               <Text style={styles.levelBadgeText}>Lv.{character.level}</Text>
@@ -244,13 +251,81 @@ export default function Profile() {
         </View>
       )}
 
+      {/* Body Mass & Target Harian */}
+      <View style={styles.card}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="body" size={20} color="#FF821D" />
+            <Text style={styles.sectionTitle}>Data Fisik & Target Harian</Text>
+          </View>
+          <TouchableOpacity onPress={() => setBmiModalVisible(true)}>
+            <Text style={{ color: '#FF821D', fontWeight: '700', fontSize: 13 }}>Update</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.statChipsRow}>
+          <View style={[styles.statChip, { backgroundColor: '#F3F4F6' }]}>
+            <Text style={[styles.statChipValue, { color: '#374151', fontSize: 18 }]}>{userAuth?.weight || '-'}</Text>
+            <Text style={styles.statChipLabel}>Berat (kg)</Text>
+          </View>
+          <View style={[styles.statChip, { backgroundColor: '#F3F4F6' }]}>
+            <Text style={[styles.statChipValue, { color: '#374151', fontSize: 18 }]}>{userAuth?.height || '-'}</Text>
+            <Text style={styles.statChipLabel}>Tinggi (cm)</Text>
+          </View>
+        </View>
+
+        {foodStats?.data?.dailyTargets && (
+          <View style={{ marginTop: 16, gap: 10 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#6B7280', marginBottom: 4 }}>
+              Target Nutrisi dari BMI:
+            </Text>
+            {[
+              { label: 'Kalori', value: foodStats.data.dailyTargets.calories, unit: 'kcal', icon: 'flame', color: '#FF821D' },
+              { label: 'Protein', value: foodStats.data.dailyTargets.protein, unit: 'g', icon: 'fish', color: '#3B82F6' },
+              { label: 'Karbo', value: foodStats.data.dailyTargets.carbohydrate, unit: 'g', icon: 'leaf', color: '#10B981' },
+              { label: 'Lemak', value: foodStats.data.dailyTargets.fat, unit: 'g', icon: 'water', color: '#F59E0B' },
+            ].map((t, i) => (
+              <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F9FAFB', padding: 10, borderRadius: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name={t.icon as any} size={16} color={t.color} />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151' }}>{t.label}</Text>
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#111827' }}>{t.value} <Text style={{ fontSize: 11, fontWeight: '600', color: '#9CA3AF' }}>{t.unit}</Text></Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
       {/* Action Buttons */}
       <View style={styles.actionsCard}>
+        {/* Admin Panel — hanya tampil untuk admin */}
+        {isAdmin && (
+          <>
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => router.push('/admin' as any)}
+            >
+              <LinearGradient colors={['#FF821D', '#F26200']} style={styles.actionIcon}>
+                <Ionicons name="shield-checkmark" size={20} color="#fff" />
+              </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionText}>Admin Panel</Text>
+                <Text style={styles.actionSubText}>Kelola user & leaderboard</Text>
+              </View>
+              <View style={styles.adminPanelBadge}>
+                <Text style={styles.adminPanelBadgeText}>Admin</Text>
+              </View>
+            </TouchableOpacity>
+            <View style={styles.actionDivider} />
+          </>
+        )}
+
         <TouchableOpacity style={styles.actionRow} onPress={handleChangePassword}>
           <View style={[styles.actionIcon, { backgroundColor: '#EFF6FF' }]}>
             <Ionicons name="key" size={20} color="#3B82F6" />
           </View>
-          <Text style={styles.actionText}>Change Password</Text>
+          <Text style={[styles.actionText, { flex: 1 }]}>Change Password</Text>
           <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
         </TouchableOpacity>
 
@@ -260,13 +335,16 @@ export default function Profile() {
           <View style={[styles.actionIcon, { backgroundColor: '#FEF2F2' }]}>
             <Ionicons name="log-out" size={20} color="#EF4444" />
           </View>
-          <Text style={[styles.actionText, { color: '#EF4444' }]}>Logout</Text>
+          <Text style={[styles.actionText, { flex: 1, color: '#EF4444' }]}>Logout</Text>
           <Ionicons name="chevron-forward" size={18} color="#EF4444" />
         </TouchableOpacity>
       </View>
 
       {/* Bottom spacing */}
       <View style={{ height: 100 }} />
+
+      {/* Modals */}
+      <BmiModal visible={bmiModalVisible} />
 
       {/* Modal: View/Change Profile Picture */}
       <Modal visible={modalVisible} transparent={true} animationType="fade">
@@ -301,7 +379,7 @@ export default function Profile() {
           <View style={[styles.modalContent, { padding: 24, gap: 12 }]}>
             <View style={styles.pwModalHeader}>
               <View style={styles.pwModalIconBg}>
-                <Ionicons name="key" size={24} color="#667eea" />
+                <Ionicons name="key" size={24} color="#FF821D" />
               </View>
               <Text style={styles.pwModalTitle}>Change Password</Text>
               <Text style={styles.pwModalSubtitle}>Enter your current and new password</Text>
@@ -369,7 +447,7 @@ export default function Profile() {
 
             {/* Buttons */}
             <TouchableOpacity
-              style={[styles.pwSaveButton, { backgroundColor: '#667eea' }]}
+              style={[styles.pwSaveButton, { backgroundColor: '#FF821D' }]}
               onPress={handleSubmitChangePassword}
               disabled={pwLoading}
             >
@@ -408,7 +486,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    color: '#667eea',
+    color: '#FF821D',
     fontWeight: '600',
   },
   errorText: {
@@ -443,7 +521,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF821D',
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -485,7 +563,7 @@ const styles = StyleSheet.create({
   roleBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#667eea',
+    color: '#FF821D',
   },
 
   // Stats Card
@@ -514,7 +592,7 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   levelBadge: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF821D',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -546,6 +624,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   barLabelLeft: {
     flexDirection: 'row',
@@ -625,14 +708,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionText: {
-    flex: 1,
     fontSize: 15,
     fontWeight: '600',
     color: '#111827',
   },
+  actionSubText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
   actionDivider: {
     height: 1,
     backgroundColor: '#F3F4F6',
+  },
+  adminPanelBadge: {
+    backgroundColor: '#FFF3E8',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  adminPanelBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FF821D',
   },
 
   // Modals
@@ -660,7 +758,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     borderWidth: 3,
-    borderColor: '#667eea',
+    borderColor: '#FF821D',
     marginVertical: 8,
   },
   modalButton: {
@@ -754,5 +852,16 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontWeight: '700',
     fontSize: 15,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });

@@ -3,6 +3,7 @@ import { Animated, Easing, PanResponder, Pressable, StyleSheet, View } from 'rea
 import { CharacterDef } from '@/store/theme/slice';
 import ExpressionBubble from './expression-bubble';
 import { BunnyCharacterBody, CatCharacterBody, DogCharacterBody, DragonCharacterBody, FishCharacterBody, OrangeCharacterBody } from './character-bodies';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface Props {
   def: CharacterDef;
@@ -127,9 +128,23 @@ export default function InteractiveCharacter({ def, isHealthy }: Props) {
         onPress={handlePress}
         onLongPress={handleLongPress}
         delayLongPress={500}
-        style={styles.touchArea}
+        style={[
+          styles.touchArea, 
+          !isHealthy && { transform: [{ scale: 1.25 }] }
+        ]}
         {...panResponder.panHandlers}
       >
+        {!isHealthy && (
+          <Animated.View style={{ position: 'absolute', top: 0, right: 20, zIndex: 10, transform: [{ rotate: '15deg' }] }}>
+            <Ionicons name="bandage" size={40} color="#FCA5A5" />
+          </Animated.View>
+        )}
+        {!isHealthy && (
+          <Animated.View style={{ position: 'absolute', top: -10, left: 10, zIndex: 10 }}>
+            <Ionicons name="thermometer" size={40} color="#93C5FD" />
+          </Animated.View>
+        )}
+
         <BodyComp
           def={def}
           isHealthy={isHealthy}
@@ -151,7 +166,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 400,
     position: 'absolute',
-    top: '30%',
+    bottom: '10%',
   },
   touchArea: {
     padding: 20,

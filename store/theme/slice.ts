@@ -87,11 +87,11 @@ export interface ThemeDef {
 
 export const THEMES: Record<ThemeId, ThemeDef> = {
   default: {
-    id: 'default', name: 'Sunny Day', label: '☀️',
-    sky: ['#FFF9C4', '#FFE082', '#FFCA28'],
-    ground: '#A5D6A7',
-    particle: '#FFD54F',
-    accent: '#FF8F00',
+    id: 'default', name: 'Orange Dawn', label: '☀️',
+    sky: ['#FFF8E1', '#FFD54F', '#FFB300'],
+    ground: '#FF9800',
+    particle: '#FFE082',
+    accent: '#E65100',
     sickModifier: ['#B0BEC5', '#90A4AE', '#78909C'],
   },
   forest: {

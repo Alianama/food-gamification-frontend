@@ -1,6 +1,5 @@
 import { api } from '@/utils/api';
 import { confirmFood as apiConfirmFood, detectFood as apiDetectFood } from '@/utils/api/food';
-import { showError, showSuccess } from '@/utils/toast';
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { FoodDetectionResponse, FoodState, FoodStatsResponse } from './types';
 
@@ -85,13 +84,11 @@ const foodSlice = createSlice({
           state.loading = false;
           state.predictedData = action.payload;
           state.error = null;
-          showSuccess('Makanan berhasil terdeteksi!');
         },
       )
       .addCase(asyncFoodDetection.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) || 'Gagal mendeteksi makanan';
-        showError(state.error);
       })
       // confirm
       .addCase(asyncConfirmFood.pending, state => {
@@ -105,13 +102,11 @@ const foodSlice = createSlice({
           state.confirmedData = action.payload;
           state.error = null;
           state.confirmSuccess = true;
-          showSuccess('Makanan berhasil dikonfirmasi!');
         },
       )
       .addCase(asyncConfirmFood.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) || 'Gagal mengonfirmasi makanan';
-        showError(state.error);
       })
       // stats
       .addCase(asyncGetCharacterStats.pending, state => {

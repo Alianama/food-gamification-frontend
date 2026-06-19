@@ -57,6 +57,23 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
   },
 );
 
+// === UPDATE BMI ===
+export const updateBmi = createAsyncThunk<
+  { weight: number; height: number; lastBmiUpdate: string },
+  { weight: number; height: number },
+  { rejectValue: string }
+>('auth/updateBmi', async (data, { rejectWithValue }) => {
+  try {
+    const resData = await api.put<{ status: string; data: any }>('/users/me/bmi', data);
+    if (resData && resData.status === 'success') {
+      return resData.data;
+    }
+    return rejectWithValue('Gagal update BMI');
+  } catch (err: any) {
+    return rejectWithValue(err?.response?.data?.message || 'Network error');
+  }
+});
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -100,6 +117,16 @@ const authSlice = createSlice({
       .addCase(logout.rejected, (state, action) => {
         state.loading = false;
         state.error = typeof action.payload === 'string' ? action.payload : 'Gagal logout';
+      });
+
+    // UPDATE BMI
+    builder
+      .addCase(updateBmi.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.weight = action.payload.weight;
+          state.user.height = action.payload.height;
+          state.user.lastBmiUpdate = action.payload.lastBmiUpdate;
+        }
       });
   },
 });

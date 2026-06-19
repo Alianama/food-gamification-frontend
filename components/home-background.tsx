@@ -100,14 +100,14 @@ export default function HomeBackground({ theme, isHealthy, healthPercent }: Prop
           style={StyleSheet.absoluteFill}
         />
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: bgTop, opacity: colorAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]} />
-        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: bgBot, opacity: 0.4, top: '50%' }]} />
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: bgBot, opacity: 0.4, top: '75%' }]} />
       </Animated.View>
 
       {/* Clouds */}
       {theme.id !== 'night' && (
         <>
-          <Cloud anim={cloud1} y={height * 0.15} size={120} opacity={0.6} />
-          <Cloud anim={cloud2} y={height * 0.3} size={80} opacity={0.4} />
+          <Cloud anim={cloud1} y={height * 0.6} size={120} opacity={0.6} />
+          <Cloud anim={cloud2} y={height * 0.4} size={80} opacity={0.4} />
         </>
       )}
 
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   groundContainer: {
     position: 'absolute',
-    bottom: -height * 0.1,
+    bottom: -height * 0.18, // Digeser lebih ke bawah menyesuaikan karakter
     left: -width * 0.2,
     right: -width * 0.2,
     height: height * 0.3,
@@ -176,6 +176,13 @@ const styles = StyleSheet.create({
     height: width * 1.4,
     borderRadius: width * 0.7,
     transform: [{ scaleY: 0.3 }],
-    opacity: 0.9,
+    opacity: 0.95,
+    borderTopWidth: 4,
+    borderTopColor: 'rgba(255,255,255,0.2)', // 3D highlight edge
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 5,
   },
 });

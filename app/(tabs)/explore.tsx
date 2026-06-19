@@ -17,7 +17,7 @@ import { useSelector } from 'react-redux';
 const CATEGORY_ORDER = ['Progression', 'Exploration', 'Feeding', 'XP', 'Health'];
 
 const categoryColors: Record<string, [string, string]> = {
-  Progression: ['#667eea', '#764ba2'],
+  Progression: ['#FF821D', '#F26200'],
   Exploration: ['#11998e', '#38ef7d'],
   Feeding:     ['#f093fb', '#f5576c'],
   XP:          ['#4facfe', '#00f2fe'],
@@ -56,7 +56,7 @@ export default function AchievementsScreen() {
   if (loading && !data) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#667eea" />
+        <ActivityIndicator size="large" color="#FF821D" />
         <Text style={styles.loadingText}>Loading Achievements...</Text>
       </View>
     );
@@ -66,10 +66,10 @@ export default function AchievementsScreen() {
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAchievements} tintColor="#667eea" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAchievements} tintColor="#FF821D" />}
     >
       {/* Header */}
-      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.header}>
+      <LinearGradient colors={['#FF821D', '#F26200']} style={styles.header}>
         <View style={styles.headerContent}>
           <Ionicons name="trophy" size={36} color="#FFD700" />
           <Text style={styles.headerTitle}>Achievements</Text>
@@ -115,7 +115,7 @@ export default function AchievementsScreen() {
       {CATEGORY_ORDER.map(category => {
         const items = grouped[category] ?? [];
         if (items.length === 0) return null;
-        const colors = categoryColors[category] ?? ['#667eea', '#764ba2'];
+        const colors = categoryColors[category] ?? ['#FF821D', '#F26200'];
         const catIcon = categoryIcons[category] ?? 'star';
         const unlockedInCat = items.filter(a => a.unlocked).length;
 
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    color: '#667eea',
+    color: '#FF821D',
     fontWeight: '600',
   },
 

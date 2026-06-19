@@ -7,7 +7,7 @@ class ApiService {
   private api: AxiosInstance;
 
   constructor(baseURL: string) {
-    this.api = axios.create({ baseURL, timeout: 30000 });
+    this.api = axios.create({ baseURL, timeout: 60000 });
 
     this.api.interceptors.request.use(
       async (config: any) => {

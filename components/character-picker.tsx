@@ -34,7 +34,7 @@ export default function CharacterPicker({ visible, currentCharacter, onSelect, o
                 <View style={[styles.avatarBg, { backgroundColor: c.color + '20' }]}>
                   <Text style={styles.emoji}>{c.emoji}</Text>
                 </View>
-                <Text style={[styles.charName, currentCharacter === c.id && { color: '#667eea', fontWeight: '800' }]}>
+                <Text style={[styles.charName, currentCharacter === c.id && { color: '#FF821D', fontWeight: '800' }]}>
                   {c.name}
                 </Text>
                 {currentCharacter === c.id && (
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   activeCard: {
-    borderColor: '#667eea',
+    borderColor: '#FF821D',
     backgroundColor: '#EFF6FF',
   },
   avatarBg: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF821D',
     width: 20,
     height: 20,
     borderRadius: 10,

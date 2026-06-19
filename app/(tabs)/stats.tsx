@@ -16,6 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function StatsScreen() {
   const dispatch = useAppDispatch();
   const { stats, loading } = useSelector((state: RootState) => state.food);
+  const userAuth = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     if (!stats) dispatch(asyncGetCharacterStats());
@@ -25,6 +26,7 @@ export default function StatsScreen() {
   const character = data?.character;
   const summary = data?.summary;
   const averages = data?.averages;
+  const dailyTargets = data?.dailyTargets;
   const healthInfo = data?.health;
   const weeklyBreakdown = data?.weeklyBreakdown;
   const mostConsumedFoods = data?.mostConsumedFoods;
@@ -40,7 +42,7 @@ export default function StatsScreen() {
   if (loading || !stats) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#667eea" />
+        <ActivityIndicator size="large" color="#FF821D" />
         <Text style={styles.loadingText}>Loading Stats...</Text>
       </View>
     );
@@ -50,14 +52,14 @@ export default function StatsScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Page Header */}
       <View style={styles.pageHeader}>
-        <Ionicons name="analytics" size={26} color="#667eea" />
+        <Ionicons name="analytics" size={26} color="#FF821D" />
         <Text style={styles.pageTitle}>Statistics</Text>
       </View>
 
       {/* Activity Summary */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Ionicons name="calendar" size={18} color="#667eea" />
+          <Ionicons name="calendar" size={18} color="#FF821D" />
           <Text style={styles.cardTitle}>Activity Summary</Text>
         </View>
         <View style={styles.summaryRow}>
@@ -84,7 +86,7 @@ export default function StatsScreen() {
       {/* Character Stats */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Ionicons name="game-controller" size={18} color="#667eea" />
+          <Ionicons name="game-controller" size={18} color="#FF821D" />
           <Text style={styles.cardTitle}>Character Stats</Text>
           <View style={styles.levelPill}>
             <Text style={styles.levelPillText}>Lv.{character?.level}</Text>
@@ -137,7 +139,7 @@ export default function StatsScreen() {
       {/* Health Score */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Ionicons name="heart-circle" size={18} color="#667eea" />
+          <Ionicons name="heart-circle" size={18} color="#FF821D" />
           <Text style={styles.cardTitle}>Weekly Health Score</Text>
         </View>
         <View style={styles.healthScoreRow}>
@@ -162,7 +164,7 @@ export default function StatsScreen() {
       {mostConsumedFoods && mostConsumedFoods.length > 0 && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="pizza" size={18} color="#667eea" />
+            <Ionicons name="pizza" size={18} color="#FF821D" />
             <Text style={styles.cardTitle}>Most Consumed</Text>
           </View>
           {mostConsumedFoods.map((item: any, i: number) => (
@@ -172,7 +174,7 @@ export default function StatsScreen() {
               </View>
               <Text style={styles.listKey} numberOfLines={1}>{item.foodName}</Text>
               <View style={styles.countPill}>
-                <Ionicons name="repeat" size={12} color="#667eea" />
+                <Ionicons name="repeat" size={12} color="#FF821D" />
                 <Text style={styles.countPillText}>{item.count}x</Text>
               </View>
             </View>
@@ -184,7 +186,7 @@ export default function StatsScreen() {
       {weeklyBreakdown && weeklyBreakdown.length > 0 && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="calendar-outline" size={18} color="#667eea" />
+            <Ionicons name="calendar-outline" size={18} color="#FF821D" />
             <Text style={styles.cardTitle}>Weekly Intake</Text>
           </View>
           {weeklyBreakdown.map((day: any, i: number) => {
@@ -202,32 +204,49 @@ export default function StatsScreen() {
         </View>
       )}
 
-      {/* Nutrition Averages */}
-      {averages && (
+      {/* Nutrition Averages vs Targets */}
+      {averages && dailyTargets && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="nutrition" size={18} color="#667eea" />
-            <Text style={styles.cardTitle}>Nutrition Averages</Text>
+            <Ionicons name="nutrition" size={18} color="#FF821D" />
+            <Text style={styles.cardTitle}>Nutrition vs Daily Target</Text>
+          </View>
+          
+          <View style={styles.bodyMassInfo}>
+            <Text style={styles.bodyMassText}>BMI Calculation Data:</Text>
+            <Text style={styles.bodyMassValue}>Berat: {userAuth?.weight || '-'} kg  |  Tinggi: {userAuth?.height || '-'} cm</Text>
           </View>
 
           {([
             { key: 'calories',     label: 'Calories',     icon: 'flame',        color: '#FF6B6B', unit: 'kcal' },
             { key: 'protein',      label: 'Protein',      icon: 'barbell',      color: '#4FC3F7', unit: 'g' },
-            { key: 'carbohydrate', label: 'Carbohydrate', icon: 'grid',         color: '#81C784', unit: 'g' },
+            { key: 'carbohydrate', label: 'Carbo',        icon: 'grid',         color: '#81C784', unit: 'g' },
             { key: 'fat',          label: 'Fat',          icon: 'water',        color: '#E57373', unit: 'g' },
-            { key: 'fiber',        label: 'Fiber',        icon: 'leaf',         color: '#A5D6A7', unit: 'g' },
-            { key: 'sugar',        label: 'Sugar',        icon: 'ice-cream',    color: '#F48FB1', unit: 'g' },
-            { key: 'sodium',       label: 'Sodium',       icon: 'ellipse',      color: '#90CAF9', unit: 'mg' },
           ] as const).map(({ key, label, icon, color, unit }) => {
-            const val = (averages as any)[key];
-            if (val === undefined) return null;
+            const avgVal = (averages as any)[key];
+            const tgtVal = (dailyTargets as any)[key];
+            if (avgVal === undefined || tgtVal === undefined) return null;
+            
+            const safeTgt = tgtVal > 0 ? tgtVal : 1;
+            const percent = Math.min((avgVal / safeTgt) * 100, 100);
+            const isOver = avgVal > tgtVal;
+
             return (
               <View key={key} style={styles.nutritionRow}>
                 <View style={[styles.nutritionIconBg, { backgroundColor: color + '20' }]}>
                   <Ionicons name={icon as any} size={16} color={color} />
                 </View>
-                <Text style={styles.nutritionLabel}>{label}</Text>
-                <Text style={styles.nutritionValue}>{val} {unit}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={styles.nutritionLabel}>{label}</Text>
+                    <Text style={styles.nutritionValue}>
+                      <Text style={{ color: isOver ? '#EF4444' : '#111827' }}>{avgVal}</Text> / {tgtVal} {unit}
+                    </Text>
+                  </View>
+                  <View style={{ height: 6, backgroundColor: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
+                    <View style={{ width: `${percent}%`, height: '100%', backgroundColor: isOver ? '#EF4444' : color, borderRadius: 3 }} />
+                  </View>
+                </View>
               </View>
             );
           })}
@@ -238,7 +257,7 @@ export default function StatsScreen() {
       {tips && tips.length > 0 && (
         <View style={[styles.card, { marginBottom: 0 }]}>
           <View style={styles.cardHeader}>
-            <Ionicons name="bulb" size={18} color="#667eea" />
+            <Ionicons name="bulb" size={18} color="#FF821D" />
             <Text style={styles.cardTitle}>Health Tips</Text>
           </View>
           {tips.map((tip: string, i: number) => (
@@ -270,7 +289,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    color: '#667eea',
+    color: '#FF821D',
     fontWeight: '600',
   },
   pageHeader: {
@@ -335,7 +354,7 @@ const styles = StyleSheet.create({
 
   // Level pill
   levelPill: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF821D',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
@@ -431,7 +450,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  countPillText: { fontSize: 12, fontWeight: '700', color: '#667eea' },
+  countPillText: { fontSize: 12, fontWeight: '700', color: '#FF821D' },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -459,8 +478,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nutritionLabel: { flex: 1, fontSize: 14, fontWeight: '600', color: '#374151' },
-  nutritionValue: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  nutritionLabel: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  nutritionValue: { fontSize: 12, fontWeight: '600', color: '#9CA3AF' },
+  bodyMassInfo: {
+    backgroundColor: '#F9FAFB',
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  bodyMassText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  bodyMassValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1F2937',
+  },
 
   // Tips
   tipRow: {

@@ -4,6 +4,7 @@ import foodReducer from './food/slice';
 import profileReducer from './profile/slice';
 import achievementReducer from './achievement/slice';
 import themeReducer from './theme/slice';
+import adminReducer from './admin/slice';
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -11,6 +12,7 @@ const appReducer = combineReducers({
   profile: profileReducer,
   achievement: achievementReducer,
   theme: themeReducer,
+  admin: adminReducer,
 });
 
 const rootReducer = (state: any, action: Action) => {

@@ -103,7 +103,7 @@ export default function UploadModal({
           {!imageUri && !loading && !data && !error && (
             <>
               <View style={styles.titleRow}>
-                <Ionicons name="camera" size={22} color="#667eea" />
+                <Ionicons name="camera" size={22} color="#FF821D" />
                 <Text style={styles.title}>Upload Food Image</Text>
               </View>
               <Text style={styles.subtitle}>Take a photo or choose from your gallery</Text>
@@ -188,7 +188,7 @@ export default function UploadModal({
                   <View style={styles.resultCard}>
                     {/* Food name */}
                     <View style={styles.resultFoodHeader}>
-                      <Ionicons name="restaurant" size={24} color="#667eea" />
+                      <Ionicons name="restaurant" size={24} color="#FF821D" />
                       <Text style={styles.resultFoodTitle} numberOfLines={2}>
                         {data?.data?.predictions?.predicted_food || 'Food Detected'}
                       </Text>
@@ -196,7 +196,7 @@ export default function UploadModal({
 
                     {/* Nutrition */}
                     {nutrition && Object.entries(nutrition).map(([key, value]) => {
-                      const item = nutritionConfig[key];
+                      const item = nutritionConfig[key.toLowerCase()];
                       if (!item) return null;
                       return (
                         <View key={key} style={styles.nutritionRow}>
@@ -248,7 +248,7 @@ export default function UploadModal({
           {/* ── STATE 5: Loading ── */}
           {loading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#667eea" />
+              <ActivityIndicator size="large" color="#FF821D" />
               <Text style={styles.loadingText}>Detecting food...</Text>
             </View>
           )}
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
-    color: '#667eea',
+    color: '#FF821D',
     fontWeight: '600',
   },
 

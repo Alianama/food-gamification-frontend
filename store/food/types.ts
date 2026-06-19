@@ -74,6 +74,8 @@ export interface DailyBreakdownItem {
 
 export interface FoodStatsData {
   period: FoodPeriod;
+  dailyTargets: FoodAverages;
+  todayNutrition: FoodAverages;
   summary: FoodSummaryTotals;
   averages: FoodAverages;
   nutritionRecommendations: string[];
@@ -89,7 +91,7 @@ export interface FoodStatsData {
   };
   mostConsumedFoods: MostConsumedFoodItem[];
   dailyBreakdown: DailyBreakdownItem[];
-  weeklyBreakdown: DailyBreakdownItem[];
+  weeklyBreakdown?: DailyBreakdownItem[];
 }
 
 export interface FoodStatsResponse {

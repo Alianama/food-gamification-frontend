@@ -39,7 +39,7 @@ export default function ThemePicker({ visible, currentTheme, onSelect, onClose }
                   <View style={[styles.ground, { backgroundColor: t.ground }]} />
                   <Text style={styles.emoji}>{t.label}</Text>
                 </LinearGradient>
-                <Text style={[styles.themeName, currentTheme === t.id && { color: '#667eea', fontWeight: '800' }]}>
+                <Text style={[styles.themeName, currentTheme === t.id && { color: '#FF821D', fontWeight: '800' }]}>
                   {t.name}
                 </Text>
                 {currentTheme === t.id && (
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   activeCard: {
-    borderColor: '#667eea',
+    borderColor: '#FF821D',
     backgroundColor: '#EFF6FF',
   },
   swatch: {
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF821D',
     width: 20,
     height: 20,
     borderRadius: 10,

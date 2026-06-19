@@ -14,12 +14,41 @@ interface Props {
 
 // ─── Reusable animated shape primitives ──────────────────────────────────────
 
-function Circle({ size, color, style }: { size: number; color: string; style?: any }) {
-  return <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color }, style]} />;
+function Circle({ size, color, style, children }: { size: number; color: string; style?: any; children?: React.ReactNode }) {
+  return (
+    <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, overflow: 'hidden' }, style]}>
+      {children}
+      {/* 3D Highlight */}
+      <View style={{ position: 'absolute', top: size * 0.08, left: size * 0.15, width: size * 0.4, height: size * 0.25, borderRadius: size * 0.2, backgroundColor: 'rgba(255,255,255,0.3)', transform: [{ rotate: '-20deg' }] }} />
+      {/* 3D Shadow */}
+      <View style={{ position: 'absolute', bottom: -size * 0.1, left: -size * 0.1, width: size * 1.2, height: size * 0.4, borderRadius: size * 0.6, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+    </View>
+  );
 }
 
-function Oval({ w, h, color, style }: { w: number; h: number; color: string; style?: any }) {
-  return <View style={[{ width: w, height: h, borderRadius: w / 2, backgroundColor: color }, style]} />;
+function Oval({ w, h, color, style, children }: { w: number; h: number; color: string; style?: any; children?: React.ReactNode }) {
+  return (
+    <View style={[{ width: w, height: h, borderRadius: Math.max(w, h), backgroundColor: color, overflow: 'hidden' }, style]}>
+      {children}
+      {/* 3D Highlight */}
+      <View style={{ position: 'absolute', top: h * 0.05, left: w * 0.1, width: w * 0.6, height: h * 0.25, borderRadius: w * 0.3, backgroundColor: 'rgba(255,255,255,0.25)', transform: [{ rotate: '-15deg' }] }} />
+      {/* 3D Shadow */}
+      <View style={{ position: 'absolute', bottom: -h * 0.1, left: -w * 0.1, width: w * 1.2, height: h * 0.4, borderRadius: w * 0.6, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+    </View>
+  );
+}
+
+function GrossSpots({ isHealthy, w, h }: { isHealthy: boolean; w: number; h: number }) {
+  if (isHealthy) return null;
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <View style={{ position: 'absolute', top: h*0.2, left: w*0.2, width: w*0.12, height: w*0.12, borderRadius: w*0.06, backgroundColor: '#800080', opacity: 0.7 }} />
+      <View style={{ position: 'absolute', top: h*0.4, right: w*0.15, width: w*0.1, height: w*0.1, borderRadius: w*0.05, backgroundColor: '#006400', opacity: 0.7 }} />
+      <View style={{ position: 'absolute', bottom: h*0.25, left: w*0.35, width: w*0.15, height: w*0.15, borderRadius: w*0.075, backgroundColor: '#8b0000', opacity: 0.7 }} />
+      <View style={{ position: 'absolute', top: h*0.6, left: w*0.1, width: w*0.08, height: w*0.08, borderRadius: w*0.04, backgroundColor: '#4B0082', opacity: 0.7 }} />
+      <View style={{ position: 'absolute', bottom: h*0.15, right: w*0.25, width: w*0.12, height: w*0.12, borderRadius: w*0.06, backgroundColor: '#808000', opacity: 0.7 }} />
+    </View>
+  );
 }
 
 // ─── Orange Character ─────────────────────────────────────────────────────────
@@ -41,8 +70,8 @@ export function OrangeCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bo
   }, []);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#D4A373';
-  const leafColor = isHealthy ? '#4CAF50' : '#9E9E9E';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const leafColor = isHealthy ? '#4CAF50' : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -67,7 +96,9 @@ export function OrangeCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bo
       </View>
 
       {/* Body */}
-      <Oval w={s * 0.85} h={s * 0.82} color={bodyColor} style={{ marginTop: 16, alignSelf: 'center' }} />
+      <Oval w={s * 0.85} h={s * 0.82} color={bodyColor} style={{ marginTop: 16, alignSelf: 'center' }}>
+        <GrossSpots isHealthy={isHealthy} w={s * 0.85} h={s * 0.82} />
+      </Oval>
 
       {/* Face */}
       <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', marginTop: 20 }]}>
@@ -161,8 +192,8 @@ export function CatCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bounc
   }, [isHealthy]);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#BCAAA4';
-  const accentColor = isHealthy ? def.accentColor : '#D7CCC8';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const accentColor = isHealthy ? def.accentColor : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -191,7 +222,9 @@ export function CatCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bounc
       </View>
 
       {/* Body/Head */}
-      <Oval w={s * 0.82} h={s * 0.78} color={bodyColor} style={{ alignSelf: 'center' }} />
+      <Oval w={s * 0.82} h={s * 0.78} color={bodyColor} style={{ alignSelf: 'center' }}>
+        <GrossSpots isHealthy={isHealthy} w={s * 0.82} h={s * 0.78} />
+      </Oval>
 
       {/* Belly patch */}
       <View style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', alignItems: 'center', paddingBottom: s * 0.14 }]}>
@@ -216,17 +249,26 @@ export function CatCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bounc
         <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderBottomWidth: 7, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#E91E63', marginBottom: 2 }} />
 
         {/* Mouth */}
-        <View style={{ flexDirection: 'row', gap: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 0, opacity: isHealthy ? 1 : 0.4 }}>
           <View style={{ width: 8, height: 6, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: '#555', borderBottomLeftRadius: 4, marginRight: 2 }} />
           <View style={{ width: 8, height: 6, borderRightWidth: 2, borderBottomWidth: 2, borderColor: '#555', borderBottomRightRadius: 4 }} />
         </View>
+
+        {!isHealthy && (
+          <View style={{
+            width: 16, height: 8,
+            borderTopWidth: 2, borderLeftWidth: 2, borderRightWidth: 2,
+            borderColor: '#555', borderTopLeftRadius: 8, borderTopRightRadius: 8,
+            marginTop: 2,
+          }} />
+        )}
 
         {/* Whiskers */}
         {[{ top: -2, left: -s * 0.42 }, { top: 4, left: -s * 0.42 }, { top: 10, left: -s * 0.42 }].map((w, i) => (
           <View key={`wl${i}`} style={{ position: 'absolute', top: w.top, left: w.left, width: s * 0.3, height: 1.5, backgroundColor: '#9E9E9E', borderRadius: 1 }} />
         ))}
         {[{ top: -2, right: -s * 0.42 }, { top: 4, right: -s * 0.42 }, { top: 10, right: -s * 0.42 }].map((w, i) => (
-          <View key={`wr${i}`} style={{ position: 'absolute', top: w.top, right: w.left as any || w.right, width: s * 0.3, height: 1.5, backgroundColor: '#9E9E9E', borderRadius: 1 }} />
+          <View key={`wr${i}`} style={{ position: 'absolute', top: w.top, right: w.right, width: s * 0.3, height: 1.5, backgroundColor: '#9E9E9E', borderRadius: 1 }} />
         ))}
       </View>
 
@@ -287,8 +329,8 @@ export function DogCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bounc
   }, [isHealthy]);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#A1887F';
-  const earColor = isHealthy ? '#6D4C41' : '#8D6E63';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const earColor = isHealthy ? '#6D4C41' : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -321,7 +363,9 @@ export function DogCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bounc
       </View>
 
       {/* Body */}
-      <Oval w={s * 0.82} h={s * 0.78} color={bodyColor} style={{ alignSelf: 'center', marginTop: 20, zIndex: 1 }} />
+      <Oval w={s * 0.82} h={s * 0.78} color={bodyColor} style={{ alignSelf: 'center', marginTop: 20, zIndex: 1 }}>
+        <GrossSpots isHealthy={isHealthy} w={s * 0.82} h={s * 0.78} />
+      </Oval>
 
       {/* Snout */}
       <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', marginTop: s * 0.28, zIndex: 2 }]}>
@@ -411,8 +455,8 @@ export function FishCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, boun
   }, [isHealthy]);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#90CAF9';
-  const finColor = isHealthy ? '#0288D1' : '#B0BEC5';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const finColor = isHealthy ? '#0288D1' : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -439,7 +483,9 @@ export function FishCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, boun
       }} />
 
       {/* Body */}
-      <Oval w={s} h={s * 0.68} color={bodyColor} style={{ position: 'absolute', right: 0, top: s * 0.08 }} />
+      <Oval w={s} h={s * 0.68} color={bodyColor} style={{ position: 'absolute', right: 0, top: s * 0.08 }}>
+        <GrossSpots isHealthy={isHealthy} w={s} h={s * 0.68} />
+      </Oval>
 
       {/* Belly */}
       <Oval w={s * 0.55} h={s * 0.34} color="rgba(255,255,255,0.35)" style={{ position: 'absolute', right: s * 0.08, top: s * 0.26 }} />
@@ -512,8 +558,8 @@ export function DragonCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bo
   }, [isHealthy]);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#A5D6A7';
-  const wingColor = isHealthy ? '#EF9A9A' : '#B0BEC5';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const wingColor = isHealthy ? '#EF9A9A' : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -546,7 +592,9 @@ export function DragonCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bo
       }} />
 
       {/* Body */}
-      <Oval w={s * 0.78} h={s * 0.82} color={bodyColor} style={{ alignSelf: 'center', marginTop: 18 }} />
+      <Oval w={s * 0.78} h={s * 0.82} color={bodyColor} style={{ alignSelf: 'center', marginTop: 18 }}>
+        <GrossSpots isHealthy={isHealthy} w={s * 0.78} h={s * 0.82} />
+      </Oval>
 
       {/* Belly scales */}
       <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', marginTop: s * 0.2 }]}>
@@ -649,8 +697,8 @@ export function BunnyCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bou
   }, [isHealthy]);
 
   const s = size;
-  const bodyColor = isHealthy ? def.color : '#F8BBD9';
-  const earInner = '#FFCDD2';
+  const bodyColor = isHealthy ? def.color : '#2D3748';
+  const earInner = isHealthy ? '#FFCDD2' : '#4B5563';
 
   return (
     <Animated.View style={[
@@ -683,7 +731,9 @@ export function BunnyCharacterBody({ def, isHealthy, squishAnim, wiggleAnim, bou
       </View>
 
       {/* Body */}
-      <Oval w={s * 0.84} h={s * 0.8} color={bodyColor} style={{ alignSelf: 'center', marginTop: s * 0.38 }} />
+      <Oval w={s * 0.84} h={s * 0.8} color={bodyColor} style={{ alignSelf: 'center', marginTop: s * 0.38 }}>
+        <GrossSpots isHealthy={isHealthy} w={s * 0.84} h={s * 0.8} />
+      </Oval>
 
       {/* Tummy */}
       <View style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', alignItems: 'center', paddingBottom: s * 0.12 }]}>

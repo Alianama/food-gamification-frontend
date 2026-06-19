@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import rootReducer from './rootReducer';
+import { toastMiddleware } from './toastMiddleware';
 
 export const store = configureStore({
   reducer: rootReducer,
-  middleware: getDefaultMiddleware => getDefaultMiddleware(),
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware().concat(toastMiddleware),
 });
 
 // Types for use throughout the app

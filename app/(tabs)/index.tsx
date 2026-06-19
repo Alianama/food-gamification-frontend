@@ -1,7 +1,10 @@
 import CharacterPicker from '@/components/character-picker';
 import HomeBackground from '@/components/home-background';
 import InteractiveCharacter from '@/components/interactive-character';
-import GameHud from '@/components/stats-hud';
+
+import DailyNutritionInfo from '@/components/daily-nutrition-info';
+import HealthTips from '@/components/health-tips';
+import BmiModal from '@/components/bmi-modal';
 import ThemePicker from '@/components/theme-picker';
 import { RootState } from '@/store';
 import { asyncGetCharacterStats } from '@/store/food/slice';
@@ -16,6 +19,7 @@ import { useSelector } from 'react-redux';
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const { confirmedData, stats } = useSelector((state: RootState) => state.food);
+  const { user } = useSelector((state: RootState) => state.auth);
   const { themeId, characterId, loaded } = useSelector((state: RootState) => state.theme);
   const router = useRouter();
 
@@ -40,6 +44,26 @@ export default function HomeScreen() {
   const healthPercent = characterStats ? Math.min(characterStats.healthPoint, 100) : 100;
   const isHealthy = healthPercent >= 50; // Below 50 is sick
 
+  const [showBmiModal, setShowBmiModal] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!user.weight || !user.height) {
+      setShowBmiModal(true);
+      return;
+    }
+    if (user.lastBmiUpdate) {
+      const lastUpdate = new Date(user.lastBmiUpdate).getTime();
+      const now = new Date().getTime();
+      const daysDiff = (now - lastUpdate) / (1000 * 3600 * 24);
+      if (daysDiff > 30) {
+        setShowBmiModal(true);
+        return;
+      }
+    }
+    setShowBmiModal(false);
+  }, [user]);
+
   if (!loaded) return <View style={styles.container} />;
 
   return (
@@ -51,34 +75,39 @@ export default function HomeScreen() {
         healthPercent={healthPercent}
       />
 
-      {/* Floating Header Buttons */}
-      <View style={styles.headerBtns}>
-        <Pressable style={styles.iconBtn} onPress={() => router.push('/log')}>
-          <Ionicons name="list" size={20} color="#1F2937" />
-        </Pressable>
-        <Pressable style={styles.iconBtn} onPress={() => setCharPickerVisible(true)}>
-          <Ionicons name="paw" size={20} color="#1F2937" />
-        </Pressable>
-        <Pressable style={styles.iconBtn} onPress={() => setThemePickerVisible(true)}>
-          <Ionicons name="color-palette" size={20} color="#1F2937" />
-        </Pressable>
-      </View>
+      {/* Action Buttons Layer moved to UnifiedStatsPanel */}
 
-      {/* HUD Layer */}
-      {characterStats && (
-        <View style={styles.hudContainer}>
-          <GameHud
-            level={characterStats.level}
-            statusName={characterStats.statusName}
-            healthPoint={characterStats.healthPoint}
-            xpPoint={characterStats.xpPoint}
-            xpToNextLevel={characterStats.xpToNextLevel}
-          />
-        </View>
-      )}
+
+
+
 
       {/* Interactive Character Layer */}
       <InteractiveCharacter def={currentChar} isHealthy={isHealthy} />
+
+      {/* Unified Stats Layer (Health, XP, Nutrition) */}
+      {/* Gunakan conditional render (bukan return null internal) untuk hindari React 19 static flag error */}
+      {(() => {
+        const hasStats = stats?.data?.dailyTargets && stats.data.todayNutrition && stats.data.character;
+        if (hasStats) {
+          return (
+            <DailyNutritionInfo
+              statsData={stats.data}
+              onPressLog={() => router.push('/log')}
+              onPressChar={() => setCharPickerVisible(true)}
+              onPressTheme={() => setThemePickerVisible(true)}
+            />
+          );
+        }
+        return null;
+      })()}
+
+      {/* Health Tips Layer */}
+      {stats?.data?.healthRecommendations && stats.data.healthRecommendations.length > 0 ? (
+        <HealthTips tips={stats.data.healthRecommendations} />
+      ) : null}
+
+      {/* BMI Modal — selalu render, komponen internal handle visible=false */}
+      <BmiModal visible={showBmiModal} />
 
       {/* Pickers Layer */}
       <ThemePicker
@@ -106,7 +135,7 @@ const styles = StyleSheet.create({
   headerBtns: {
     position: 'absolute',
     top: 60,
-    right: 16,
+    left: 16,
     flexDirection: 'column',
     gap: 12,
     zIndex: 20,
@@ -124,10 +153,5 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  hudContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 16,
-    zIndex: 10,
-  },
+
 });
